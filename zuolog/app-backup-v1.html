@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>双态空间</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 玻璃风格 */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px;
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-item {
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.8);
+            padding: 10px 28px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: #764ba2;
+            background: white;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 双态空间 */
+        .dual-space {
+            display: flex;
+            width: 200vw;
+            height: 100vh;
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        .dual-space.doing-mode { transform: translateX(0); }
+        .dual-space.not-doing-mode { transform: translateX(-100vw); }
+
+        .space {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 80px 20px 100px;
+        }
+
+        /* 中央添加按钮 */
+        .center-add-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            z-index: 90;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            transition: all 0.3s;
+        }
+
+        .center-add-btn:hover {
+            transform: translate(-50%, -50%) scale(1.08);
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* 底部用户信息 */
+        .user-info {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            font-size: 13px;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* 任务卡片 */
+        .task-item {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .task-item:active {
+            transform: scale(0.98);
+        }
+
+        .task-content {
+            padding: 16px 20px;
+        }
+
+        /* 侧滑面板 */
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            z-index: 300;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-panel.show {
+            transform: translateX(0);
+        }
+
+        .side-panel-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .side-panel-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .side-panel-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .side-panel-close:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .side-panel-body {
+            flex: 1;
+            padding: 28px;
+            overflow-y: auto;
+        }
+
+        .side-panel-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 299;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .side-panel-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 时间选项 */
+        .time-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .time-option {
+            padding: 10px 16px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.05);
+            color: #555;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .time-option:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .time-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-size: 15px;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="top-nav">
+        <div class="nav-item active" id="navDo" onclick="switchSpace('do')">做</div>
+        <div class="nav-item" id="navNotDo" onclick="switchSpace('not-do')">不做</div>
+    </div>
+
+    <!-- 中央添加按钮 -->
+    <div class="center-add-btn" onclick="openPanel()">+</div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 双态空间 -->
+    <div class="dual-space doing-mode" id="dualSpace">
+        <!-- 【做】空间 -->
+        <div class="space">
+            <div class="section-title">Doing</div>
+            <div id="doList"></div>
+            <div id="emptyDo" class="empty-state" style="display:none">
+                <p>暂无承诺事项</p>
+                <p style="font-size:12px;opacity:0.6;margin-top:8px">点击中央 + 按钮创建</p>
+            </div>
+        </div>
+
+        <!-- 【不做】空间 -->
+        <div class="space">
+            <div class="section-title">Not Doing</div>
+            <div id="pendingSection" style="margin-bottom:24px">
+                <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px">待处理邀约</div>
+                <div id="pendingList"></div>
+            </div>
+            <div id="abstinenceSection" style="margin-bottom:24px">
+                <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px">戒断清单</div>
+                <div id="abstinenceList"></div>
+            </div>
+            <div id="foldedSection">
+                <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;cursor:pointer" onclick="toggleFolded()">
+                    已忽略 <span id="foldedToggle">[展开]</span>
+                </div>
+                <div id="foldedList" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部用户信息 -->
+    <div class="user-info" id="userInfo">
+        <div class="user-avatar" id="userAvatar"></div>
+        <span class="logout-btn" onclick="logout()">退出</span>
+    </div>
+
+    <!-- 创建面板 -->
+    <div class="side-panel-backdrop" id="backdrop" onclick="closePanel()"></div>
+    <div class="side-panel" id="panel">
+        <div class="side-panel-header">
+            <div class="side-panel-title">新建清单</div>
+            <div class="side-panel-close" onclick="closePanel()">×</div>
+        </div>
+        <div class="side-panel-body">
+            <input type="text" id="taskInput" placeholder="输入内容..." 
+                   style="width:100%;padding:16px 0;border:none;border-bottom:2px solid #e5e5e5;font-size:18px;margin-bottom:24px;outline:none">
+            
+            <div style="margin-bottom:24px">
+                <div style="font-size:14px;color:#666;margin-bottom:12px;font-weight:500">选择时间</div>
+                <div class="time-options">
+                    <div class="time-option" data-value="15m" onclick="selectTime(this)">一刻钟后</div>
+                    <div class="time-option" data-value="1h" onclick="selectTime(this)">一小时后</div>
+                    <div class="time-option" data-value="1d" onclick="selectTime(this)">一天后</div>
+                    <div class="time-option" data-value="1w" onclick="selectTime(this)">一周后</div>
+                    <div class="time-option" data-value="1m" onclick="selectTime(this)">一个月后</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:32px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                    <input type="checkbox" id="repeatCheck" style="width:20px;height:20px">
+                    <span style="font-size:15px;color:#333">重复提醒</span>
+                </label>
+            </div>
+            
+            <div style="display:flex;gap:12px">
+                <button onclick="createTask('do')" style="flex:1;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">做</button>
+                <button onclick="createTask('not-do')" style="flex:1;padding:16px;background:#666;color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">不做</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        let currentSpace = 'do';
+        let selectedTime = null;
+
+        // 检查登录状态
+        if (!authToken) {
+            window.location.href = 'login.html';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            if (currentUser) {
+                document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+            loadTasks();
+        });
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function switchSpace(space) {
+            currentSpace = space;
+            const dualSpace = document.getElementById('dualSpace');
+            const navDo = document.getElementById('navDo');
+            const navNotDo = document.getElementById('navNotDo');
+
+            if (space === 'do') {
+                dualSpace.classList.remove('not-doing-mode');
+                dualSpace.classList.add('doing-mode');
+                navDo.classList.add('active');
+                navNotDo.classList.remove('active');
+            } else {
+                dualSpace.classList.remove('doing-mode');
+                dualSpace.classList.add('not-doing-mode');
+                navDo.classList.remove('active');
+                navNotDo.classList.add('active');
+            }
+        }
+
+        function openPanel() {
+            document.getElementById('backdrop').classList.add('show');
+            document.getElementById('panel').classList.add('show');
+            document.getElementById('taskInput').focus();
+            document.querySelector('.center-add-btn').style.opacity = '0';
+        }
+
+        function closePanel() {
+            document.getElementById('backdrop').classList.remove('show');
+            document.getElementById('panel').classList.remove('show');
+            document.getElementById('taskInput').value = '';
+            document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('selected'));
+            document.getElementById('repeatCheck').checked = false;
+            selectedTime = null;
+            document.querySelector('.center-add-btn').style.opacity = '1';
+        }
+
+        function selectTime(el) {
+            document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedTime = el.dataset.value;
+        }
+
+        function calculateTime(value) {
+            const now = new Date();
+            const result = new Date(now);
+            switch(value) {
+                case '15m': result.setMinutes(now.getMinutes() + 15); break;
+                case '1h': result.setHours(now.getHours() + 1); break;
+                case '1d': result.setDate(now.getDate() + 1); break;
+                case '1w': result.setDate(now.getDate() + 7); break;
+                case '1m': result.setMonth(now.getMonth() + 1); break;
+            }
+            return result.toISOString();
+        }
+
+        async function createTask(spaceType) {
+            const title = document.getElementById('taskInput').value.trim();
+            if (!title) {
+                showToast('请输入内容');
+                return;
+            }
+
+            const taskData = {
+                title,
+                spaceType,
+                taskType: spaceType === 'do' ? 'self' : 'abstinence',
+                time: selectedTime ? calculateTime(selectedTime) : null,
+                repeat: document.getElementById('repeatCheck').checked
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/tasks/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(taskData)
+                });
+
+                if (res.ok) {
+                    showToast('创建成功');
+                    closePanel();
+                    loadTasks();
+                } else {
+                    showToast('创建失败');
+                }
+            } catch (error) {
+                showToast('网络错误');
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                // 加载做列表
+                const doRes = await fetch(`${API_BASE}/tasks/list?space=do`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const doData = await doRes.json();
+                renderDoList(doData.data?.do || []);
+
+                // 加载不做列表
+                const notDoRes = await fetch(`${API_BASE}/tasks/list?space=not-do`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const notDoData = await notDoRes.json();
+                const notDo = notDoData.data?.notDo || { pending: [], abstinence: [], folded: [] };
+                renderNotDoList(notDo);
+            } catch (error) {
+                showToast('加载失败');
+            }
+        }
+
+        function renderDoList(tasks) {
+            const container = document.getElementById('doList');
+            const empty = document.getElementById('emptyDo');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            container.innerHTML = tasks.map(task => `
+                <div class="task-item" onclick="showTaskDetail(${task.id})">
+                    <div class="task-content">
+                        <div style="font-weight:500;color:#333">${task.title}</div>
+                        ${task.time ? `<div style="font-size:12px;color:#666;margin-top:4px">${new Date(task.time).toLocaleString()}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderNotDoList(data) {
+            document.getElementById('pendingList').innerHTML = (data.pending || []).map(task => `
+                <div class="task-item" onclick="showTaskDetail(${task.id})">
+                    <div class="task-content">
+                        <div style="font-weight:500;color:#333">${task.title}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('abstinenceList').innerHTML = (data.abstinence || []).map(task => `
+                <div class="task-item" onclick="showTaskDetail(${task.id})">
+                    <div class="task-content">
+                        <div style="font-weight:500;color:#333;text-decoration:line-through;opacity:0.6">${task.title}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('foldedList').innerHTML = (data.folded || []).map(task => `
+                <div class="task-item" onclick="showTaskDetail(${task.id})">
+                    <div class="task-content">
+                        <div style="font-weight:500;color:#333;opacity:0.5">${task.title}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleFolded() {
+            const list = document.getElementById('foldedList');
+            const toggle = document.getElementById('foldedToggle');
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
+                toggle.textContent = '[收起]';
+            } else {
+                list.style.display = 'none';
+                toggle.textContent = '[展开]';
+            }
+        }
+
+        function showTaskDetail(id) {
+            // 可扩展显示详情
+            console.log('Task:', id);
+        }
+
+        function logout() {
+            if (confirm('确定要退出吗？')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentSpace === 'not-do') {
+                switchSpace('do');
+            } else if (e.key === 'ArrowRight' && currentSpace === 'do') {
+                switchSpace('not-do');
+            } else if (e.key === 'Escape') {
+                closePanel();
+            }
+        });
+    </script>
+</body>
+</html>

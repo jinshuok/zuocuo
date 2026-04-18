@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>双态空间</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --text-tertiary: rgba(255, 255, 255, 0.3);
+            --accent: rgba(255, 255, 255, 0.9);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Utility */
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Container - Limited Width */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Glass Card */
+        .glass {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        
+        /* Auth Page */
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .auth-box {
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        
+        .auth-title {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .auth-sub {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 48px;
+            font-weight: 300;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .input:focus {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .input::placeholder { color: var(--text-tertiary); }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            margin-top: 8px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        
+        .auth-switch {
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .auth-switch:hover { color: var(--text); }
+        
+        /* Main Layout */
+        .main-page { display: none; }
+        .main-page.on { display: block; }
+        
+        /* Header - Minimal */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 16px 0;
+            background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+        }
+        
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            opacity: 0.8;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .icon-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        .badge-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            display: none;
+        }
+        
+        .badge-dot.on { display: block; }
+        
+        /* Add Input - Compact */
+        .add-section {
+            padding: 8px 0 24px;
+        }
+        
+        .add-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .add-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .add-input:focus {
+            border-color: rgba(255,255,255,0.15);
+            background: var(--surface-hover);
+        }
+        
+        .add-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 14px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .action-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.15);
+        }
+        
+        .action-btn.primary {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+        
+        .action-btn.primary:hover { opacity: 0.9; }
+        
+        /* Toggle - Minimal */
+        .toggle-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .toggle {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toggle.on {
+            background: var(--surface);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        /* Lists */
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+        
+        .section-title {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .section-count {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+        
+        /* Task Card - Compact */
+        .task {
+            padding: 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .task:hover {
+            background: var(--surface);
+            border-color: var(--border);
+        }
+        
+        .task-text {
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .task-actions {
+            display: none;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .task:hover .task-actions,
+        .task.expanded .task-actions {
+            display: flex;
+        }
+        
+        .task-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .task-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+        
+        /* Modal - Minimal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .modal.on { display: flex; }
+        
+        .modal-sheet {
+            width: 100%;
+            max-width: 720px;
+            background: linear-gradient(to top, #0a0a0a, #111);
+            border-top: 1px solid var(--border);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            padding: 16px 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        .option.on {
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        /* Inbox & Sent */
+        .mention-card {
+            padding: 16px;
+            margin-bottom: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        
+        .mention-from {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .mention-text {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .mention-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.95);
+            color: #000;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .toast.on {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Nav */
+        .nav-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+        
+        .nav-fab:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <!-- AUTH PAGE -->
+    <div id="authPage" class="auth-page">
+        <div class="auth-box">
+            <div class="auth-title">双态空间</div>
+            <div class="auth-sub">记录你爱做的，和你要戒掉的</div>
+            <input type="text" class="input" id="authUser" placeholder="用户名" autocomplete="username">
+            <input type="password" class="input" id="authPass" placeholder="密码" autocomplete="current-password">
+            <button class="btn" id="authBtn" onclick="handleAuth()">登录</button>
+            <div class="auth-switch" onclick="toggleAuthMode()" id="authSwitch">没有账号？注册</div>
+        </div>
+    </div>
+
+    <!-- MAIN PAGE -->
+    <div id="mainPage" class="main-page">
+        <div class="header">
+            <div class="container">
+                <div class="header-inner">
+                    <div class="logo">双态空间</div>
+                    <div class="header-actions">
+                        <button class="icon-btn" onclick="showView('inbox')" title="收件箱">
+                            📬
+                            <span class="badge-dot" id="inboxBadge"></span>
+                        </button>
+                        <button class="icon-btn" onclick="showView('sent')" title="已发送">✉️</button>
+                        <button class="icon-btn" onclick="logout()" title="退出">⎋</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Add Section -->
+            <div class="add-section" id="addSection">
+                <div class="toggle-row">
+                    <button class="toggle on" id="toggleLove" onclick="setType('love')">爱做</button>
+                    <button class="toggle" id="toggleQuit" onclick="setType('quit')">不做</button>
+                </div>
+                <div class="add-box">
+                    <input type="text" class="add-input" id="addInput" placeholder="输入内容..." maxlength="200">
+                    <div class="add-actions">
+                        <button class="action-btn" onclick="showAddOptions()">⚙️</button>
+                        <button class="action-btn primary" onclick="addTask()">添加</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lists -->
+            <div id="listsView">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">爱做</span>
+                        <span class="section-count" id="loveCount">0</span>
+                    </div>
+                    <div id="loveList"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">不做</span>
+                        <span class="section-count" id="quitCount">0</span>
+                    </div>
+                    <div id="quitList"></div>
+                </div>
+            </div>
+
+            <!-- Inbox View -->
+            <div id="inboxView" class="hidden">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">收到的 @</span>
+                    </div>
+                    <div id="inboxList"></div>
+                </div>
+            </div>
+
+            <!-- Sent View -->
+            <div id="sentView" class="hidden">
+                <div class="section">
+                    <div class="section-header">
+                        <span class="section-title">已发送的 @</span>
+                    </div>
+                    <div id="sentList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Options Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <span class="modal-title">设置提醒</span>
+                <button class="modal-close" onclick="closeModal('addModal')">×</button>
+            </div>
+            <div class="option-grid">
+                <button class="option" data-val="15m" onclick="selectOption(this)">一刻钟</button>
+                <button class="option" data-val="1h" onclick="selectOption(this)">一小时</button>
+                <button class="option" data-val="1d" onclick="selectOption(this)">一天</button>
+                <button class="option" data-val="1w" onclick="selectOption(this)">一周</button>
+                <button class="option" data-val="1m" onclick="selectOption(this)">一月</button>
+                <button class="option" data-val="none" onclick="selectOption(this)">不提醒</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = '/api';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        let tasks = [];
+        let addType = 'love';
+        let selectedReminder = null;
+        let authMode = 'login';
+
+        // Init
+        if (authToken && currentUser) {
+            showMain();
+        }
+
+        function g(id) { return document.getElementById(id); }
+        function toast(msg) {
+            const t = g('toast');
+            t.textContent = msg;
+            t.classList.add('on');
+            setTimeout(() => t.classList.remove('on'), 2500);
+        }
+
+        // Auth
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            g('authBtn').textContent = authMode === 'login' ? '登录' : '注册';
+            g('authSwitch').textContent = authMode === 'login' ? '没有账号？注册' : '已有账号？登录';
+            g('authPass').value = '';
+        }
+
+        async function handleAuth() {
+            const username = g('authUser').value.trim();
+            const password = g('authPass').value;
+            if (!username || !password) { toast('请填写完整'); return; }
+            if (password.length < 6) { toast('密码至少6位'); return; }
+
+            const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+            try {
+                const res = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.token) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showMain();
+                    toast(authMode === 'login' ? '欢迎回来' : '注册成功');
+                } else {
+                    toast(data.error || '失败');
+                }
+            } catch (e) { toast('网络错误'); }
+        }
+
+        function logout() {
+            if (!confirm('退出？')) return;
+            localStorage.clear();
+            location.reload();
+        }
+
+        function showMain() {
+            g('authPage').classList.add('hidden');
+            g('mainPage').classList.add('on');
+            loadTasks();
+        }
+
+        // Main App
+        function setType(t) {
+            addType = t;
+            g('toggleLove').classList.toggle('on', t === 'love');
+            g('toggleQuit').classList.toggle('on', t === 'quit');
+            g('addInput').placeholder = t === 'love' ? '输入你爱做的事...' : '输入你要戒掉的事...';
+        }
+
+        async function loadTasks() {
+            try {
+                const [doRes, notDoRes] = await Promise.all([
+                    fetch(API_BASE + '/tasks/list?space=do', { headers: { 'Authorization': 'Bearer ' + authToken } }),
+                    fetch(API_BASE + '/tasks/list?space=not-do', { headers: { 'Authorization': 'Bearer ' + authToken } })
+                ]);
+                const doData = await doRes.json();
+                const notDoData = await notDoRes.json();
+                
+                tasks = [
+                    ...(doData.data?.do || []).map(t => ({...t, listType: 'love'})),
+                    ...(notDoData.data?.notDo?.abstinence || []).map(t => ({...t, listType: 'quit'}))
+                ];
+                render();
+            } catch (e) { toast('加载失败'); }
+        }
+
+        function render() {
+            const love = tasks.filter(t => t.listType === 'love' || t.task_type === 'self');
+            const quit = tasks.filter(t => t.listType === 'quit' || t.task_type === 'abstinence');
+            
+            g('loveCount').textContent = love.length;
+            g('quitCount').textContent = quit.length;
+            
+            g('loveList').innerHTML = love.length ? love.map(t => taskHTML(t, 'love')).join('') : '<div class="empty-state">暂无</div>';
+            g('quitList').innerHTML = quit.length ? quit.map(t => taskHTML(t, 'quit')).join('') : '<div class="empty-state">暂无</div>';
+        }
+
+        function taskHTML(t, type) {
+            return `
+                <div class="task fade-in">
+                    <div class="task-text">${t.title}</div>
+                    ${t.time ? `<div class="task-meta">⏱ ${new Date(t.time).toLocaleDateString()}</div>` : ''}
+                    <div class="task-actions">
+                        ${type === 'love' ? `<button class="task-btn" onclick="setReminder(${t.id})">提醒</button>` : ''}
+                        <button class="task-btn" onclick="mentionTask(${t.id})">@分享</button>
+                        <button class="task-btn" onclick="deleteTask(${t.id})">删除</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function addTask() {
+            const text = g('addInput').value.trim();
+            if (!text) return;
+            
+            try {
+                await fetch(API_BASE + '/tasks/create', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({
+                        title: text,
+                        spaceType: addType === 'love' ? 'do' : 'not-do',
+                        taskType: addType === 'love' ? 'self' : 'abstinence',
+                        time: selectedReminder ? calcTime(selectedReminder) : null
+                    })
+                });
+                g('addInput').value = '';
+                selectedReminder = null;
+                loadTasks();
+                toast('已添加');
+            } catch (e) { toast('添加失败'); }
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('删除？')) return;
+            try {
+                await fetch(API_BASE + '/tasks/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                loadTasks();
+            } catch (e) { toast('删除失败'); }
+        }
+
+        // Views
+        function showView(view) {
+            g('listsView').classList.toggle('hidden', view !== 'lists');
+            g('inboxView').classList.toggle('hidden', view !== 'inbox');
+            g('sentView').classList.toggle('hidden', view !== 'sent');
+            g('addSection').classList.toggle('hidden', view !== 'lists');
+            
+            if (view === 'inbox') loadInbox();
+            if (view === 'sent') loadSent();
+        }
+
+        // Modal
+        function showAddOptions() {
+            g('addModal').classList.add('on');
+        }
+        function closeModal(id) {
+            g(id).classList.remove('on');
+        }
+        function selectOption(el) {
+            document.querySelectorAll('.option').forEach(o => o.classList.remove('on'));
+            el.classList.add('on');
+            selectedReminder = el.dataset.val;
+            closeModal('addModal');
+            if (selectedReminder && selectedReminder !== 'none') {
+                toast('已设置提醒');
+            }
+        }
+
+        function calcTime(val) {
+            const now = new Date();
+            const map = { '15m': 15, '1h': 60, '1d': 1440, '1w': 10080, '1m': 43200 };
+            return new Date(now.getTime() + (map[val] || 0) * 60000).toISOString();
+        }
+
+        // Placeholders
+        function setReminder(id) { toast('提醒功能开发中'); }
+        function mentionTask(id) { toast('@分享功能开发中'); }
+        function loadInbox() { g('inboxList').innerHTML = '<div class="empty-state">暂无收件</div>'; }
+        function loadSent() { g('sentList').innerHTML = '<div class="empty-state">暂无发送</div>'; }
+
+        // Keyboard
+        g('authPass').addEventListener('keypress', e => { if (e.key === 'Enter') handleAuth(); });
+        g('addInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+    </script>
+</body>
+</html>

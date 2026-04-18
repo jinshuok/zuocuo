@@ -1,0 +1,2401 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>不做清单</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&amp;family=Noto+Sans+SC:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      /* Modern Color Palette */
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      
+      --accent-love: #f59e0b;
+      --accent-love-light: #fbbf24;
+      --accent-love-soft: rgba(245, 158, 11, 0.12);
+      
+      --accent-quit: #06b6d4;
+      --accent-quit-light: #22d3ee;
+      --accent-quit-soft: rgba(6, 182, 212, 0.12);
+      
+      --accent-mention: #8b5cf6;
+      --accent-mention-soft: rgba(139, 92, 246, 0.12);
+      
+      /* Background Gradients */
+      --bg-gradient-start: #f5f3ff;
+      --bg-gradient-mid: #eef2ff;
+      --bg-gradient-end: #f0f9ff;
+      
+      /* Glassmorphism */
+      --glass-bg: rgba(255, 255, 255, 0.72);
+      --glass-bg-hover: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --glass-border-strong: rgba(255, 255, 255, 0.8);
+      
+      /* Text Colors */
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-tertiary: #94a3b8;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+      --shadow-glow-love: 0 0 30px rgba(245, 158, 11, 0.2);
+      --shadow-glow-quit: 0 0 30px rgba(6, 182, 212, 0.2);
+      
+      /* Radius */
+      --radius-sm: 12px;
+      --radius-md: 16px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      
+      /* Transitions */
+      --t: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --t-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    html, body { 
+      height: 100%; 
+      font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
+      background-attachment: fixed;
+      color: var(--text-primary); 
+      font-size: 16px; 
+      line-height: 1.6; 
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .page { display: none; min-height: 100vh; flex-direction: column; }
+    .page.on { display: flex; }
+
+    /* ===== AUTH PAGE ===== */
+    #authPage { 
+      align-items: center; 
+      justify-content: center; 
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #authPage::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 60%);
+      animation: gradientShift 20s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(2%, 2%) rotate(120deg); }
+      66% { transform: translate(-1%, 1%) rotate(240deg); }
+    }
+    
+    .auth-wrap { 
+      width: 100%; 
+      max-width: 420px; 
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl); 
+      padding: 48px 40px 40px; 
+      box-shadow: var(--shadow-xl), var(--shadow-glow);
+      animation: up 500ms var(--t-bounce) both;
+      position: relative;
+      z-index: 1;
+    }
+    
+    @keyframes up { 
+      from { opacity: 0; transform: translateY(30px) scale(0.96); } 
+      to { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .auth-brand { 
+      font-family: "Noto Serif SC", serif; 
+      font-size: 32px; 
+      font-weight: 600; 
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent-love) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+    
+    .auth-sub { 
+      font-size: 15px; 
+      color: var(--text-secondary); 
+      margin-bottom: 36px;
+      font-weight: 400;
+      text-align: center;
+    }
+    
+    .tabs { 
+      display: flex; 
+      border-bottom: 1px solid rgba(99, 102, 241, 0.1); 
+      margin-bottom: 28px; 
+      gap: 32px;
+      justify-content: center;
+    }
+    
+    .tab-btn { 
+      background: none; 
+      border: none; 
+      padding: 12px 4px; 
+      font-size: 16px; 
+      font-weight: 500; 
+      color: var(--text-tertiary); 
+      cursor: pointer; 
+      font-family: inherit; 
+      border-bottom: 2px solid transparent; 
+      margin-bottom: -1px; 
+      transition: all var(--t);
+      position: relative;
+    }
+    
+    .tab-btn:hover { 
+      color: var(--text-secondary); 
+    }
+    
+    .tab-btn.on { 
+      color: var(--primary); 
+      border-bottom-color: var(--primary);
+    }
+    
+    .field { margin-bottom: 20px; }
+    
+    .field-label { 
+      display: block; 
+      font-size: 14px; 
+      font-weight: 500; 
+      color: var(--text-secondary); 
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+    
+    .f-input { 
+      width: 100%; 
+      padding: 14px 18px; 
+      border: 1.5px solid rgba(99, 102, 241, 0.15); 
+      border-radius: var(--radius-md); 
+      background: rgba(255, 255, 255, 0.6); 
+      color: var(--text-primary); 
+      font-size: 16px; 
+      font-family: inherit; 
+      outline: none; 
+      transition: all var(--t);
+    }
+    
+    .f-input:hover { 
+      background: rgba(255, 255, 255, 0.8); 
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+    
+    .f-input:focus { 
+      border-color: var(--primary-light); 
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    
+    .f-input::placeholder { color: var(--text-tertiary); }
+    
+    .btn-main { 
+      width: 100%; 
+      padding: 16px; 
+      margin-top: 12px; 
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); 
+      color: #fff; 
+      border: none; 
+      border-radius: var(--radius-md); 
+      font-size: 16px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      cursor: pointer; 
+      transition: all var(--t);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-main::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn-main:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+    }
+    
+    .btn-main:hover::before {
+      left: 100%;
+    }
+    
+    .btn-main:active { 
+      transform: translateY(0);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    
+    .btn-main:disabled { 
+      opacity: .6; 
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .auth-note { 
+      font-size: 13px; 
+      color: var(--text-tertiary); 
+      text-align: center; 
+      margin-top: 20px;
+    }
+    
+    .err-box { 
+      display: none; 
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
+      border: 1px solid #fecaca; 
+      color: #dc2626; 
+      border-radius: var(--radius-md); 
+      padding: 14px 16px; 
+      font-size: 14px; 
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .err-box.on { display: block; animation: shake 400ms ease-in-out; }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* ===== MAIN PAGE - TOPBAR ===== */
+    .topbar { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 16px 24px; 
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    
+    .topbar-brand { 
+      font-family: 'Noto Serif SC', serif; 
+      font-size: 22px; 
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent-love) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .topbar-right { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+    }
+    
+    .badge { 
+      font-size: 13px; 
+      color: var(--text-secondary);
+      font-weight: 500;
+      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.08);
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+    }
+    
+    .tb-btn { 
+      padding: 10px 18px; 
+      border-radius: var(--radius-md);
+      font-size: 14px; 
+      font-weight: 500; 
+      font-family: inherit; 
+      border: 1px solid var(--glass-border-strong);
+      background: rgba(255, 255, 255, 0.5);
+      color: var(--text-secondary); 
+      cursor: pointer; 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .tb-btn:hover { 
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--primary-light);
+      color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .tb-btn.danger { 
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    
+    .tb-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #dc2626;
+    }
+    
+    .notif-btn {
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      border: 1px solid var(--glass-border-strong);
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all var(--t);
+      position: relative;
+      backdrop-filter: blur(10px);
+    }
+    
+    .notif-btn:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .notif-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity var(--t);
+      box-shadow: 0 0 0 2px var(--glass-bg);
+    }
+    
+    .notif-dot.on { opacity: 1; animation: pulse 2s infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* ===== NAV TABS ===== */
+    .nav-tabs { 
+      display: flex; 
+      gap: 8px;
+      padding: 16px 24px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .nav-tab { 
+      padding: 12px 20px; 
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: all var(--t);
+      white-space: nowrap;
+      position: relative;
+    }
+    
+    .nav-tab:hover {
+      color: var(--text-secondary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .nav-tab.on { 
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+      font-weight: 600;
+    }
+    
+    .nav-tab.on::after {
+      content: '';
+      position: absolute;
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    /* ===== CONTENT ===== */
+    .content { 
+      flex: 1; 
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ===== ADD BOX ===== */
+    .add-box {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      animation: up 400ms var(--t-bounce) both;
+    }
+    
+    .type-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .type-row-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .type-sw {
+      display: flex;
+      background: rgba(99, 102, 241, 0.08);
+      border-radius: var(--radius-full);
+      padding: 4px;
+      gap: 4px;
+    }
+    
+    .type-sw-btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all var(--t);
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    
+    .type-sw-btn.love {
+      background: linear-gradient(135deg, var(--accent-love) 0%, var(--accent-love-light) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+    
+    .type-sw-btn.quit {
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+    }
+    
+    .add-row {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .add-inp {
+      flex: 1;
+      padding: 14px 20px;
+      border: 1.5px solid rgba(99, 102, 241, 0.15);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.6);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: all var(--t);
+    }
+    
+    .add-inp:hover {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+    
+    .add-inp:focus {
+      border-color: var(--primary-light);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    
+    .add-inp::placeholder {
+      color: var(--text-tertiary);
+    }
+    
+    .btn-add {
+      padding: 14px 32px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      cursor: pointer;
+      transition: all var(--t);
+      background: linear-gradient(135deg, var(--accent-love) 0%, var(--accent-love-light) 100%);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      white-space: nowrap;
+    }
+    
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.45);
+    }
+    
+    .btn-add:active {
+      transform: translateY(0);
+    }
+    
+    .add-tip {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 12px;
+      padding-left: 4px;
+    }
+
+    /* ===== COLUMNS ===== */
+    .cols {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    
+    .col-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: all var(--t);
+    }
+    
+    .col-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .col-head { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 20px 24px; 
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.4);
+    }
+    
+    .col-title { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      font-family: 'Noto Serif SC', serif; 
+      font-size: 18px; 
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .dot { 
+      width: 10px; 
+      height: 10px; 
+      border-radius: 50%; 
+      box-shadow: 0 0 8px currentColor;
+    }
+    
+    .dot-love { 
+      background: linear-gradient(135deg, var(--accent-love) 0%, var(--accent-love-light) 100%);
+    }
+    
+    .dot-quit { 
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+    }
+    
+    .col-ct { 
+      font-size: 14px; 
+      font-weight: 700; 
+      padding: 6px 16px; 
+      border-radius: var(--radius-full);
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      min-width: 36px;
+      text-align: center;
+    }
+    
+    .col-body { 
+      padding: 20px; 
+    }
+    
+    .empty { 
+      font-size: 15px; 
+      color: var(--text-tertiary); 
+      text-align: center; 
+      padding: 48px 20px; 
+    }
+
+    /* ===== TASK CARD ===== */
+    .tc { 
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); 
+      margin-bottom: 16px; 
+      transition: all var(--t); 
+      animation: up 300ms var(--t-bounce) both;
+      overflow: hidden;
+    }
+    
+    .tc:last-child { margin-bottom: 0; }
+    
+    .tc:hover { 
+      background: var(--glass-bg-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .tc.tc-love { 
+      border-left: 4px solid var(--accent-love);
+    }
+    
+    .tc.tc-quit { 
+      border-left: 4px solid var(--accent-quit);
+    }
+    
+    .tc.tc-mention { 
+      border-left: 4px solid var(--accent-mention);
+    }
+    
+    .tc-inner { 
+      display: flex; 
+      align-items: flex-start; 
+      gap: 16px; 
+      padding: 18px; 
+    }
+    
+    .tc-body { flex: 1; min-width: 0; }
+    
+    .tc-text { 
+      font-size: 16px; 
+      font-weight: 500; 
+      word-break: break-word; 
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    
+    .tc-meta { 
+      font-size: 13px; 
+      color: var(--text-tertiary); 
+      margin-top: 6px; 
+    }
+    
+    .rem-tag { 
+      display: inline-block; 
+      margin-top: 10px; 
+      font-size: 12px; 
+      padding: 6px 14px; 
+      border-radius: var(--radius-full); 
+      background: var(--accent-love-soft); 
+      color: var(--accent-love); 
+      border: 1px solid rgba(245, 158, 11, 0.2); 
+      font-weight: 600;
+    }
+    
+    .mention-tag { 
+      display: inline-block; 
+      margin-top: 10px; 
+      font-size: 12px; 
+      padding: 6px 14px; 
+      border-radius: var(--radius-full); 
+      background: var(--accent-mention-soft); 
+      color: var(--accent-mention); 
+      border: 1px solid rgba(139, 92, 246, 0.2); 
+      font-weight: 600;
+    }
+    
+    .tc-acts { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+      align-items: flex-end; 
+      flex-shrink: 0; 
+    }
+    
+    .act { 
+      font-size: 13px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      padding: 8px 16px; 
+      border-radius: var(--radius-md); 
+      border: 1.5px solid transparent;
+      background: rgba(255, 255, 255, 0.5);
+      color: var(--text-secondary); 
+      cursor: pointer; 
+      white-space: nowrap; 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .act:hover { 
+      background: var(--glass-bg-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .act.love { 
+      border-color: var(--accent-love);
+      color: var(--accent-love); 
+      background: var(--accent-love-soft);
+    }
+    
+    .act.love:hover { 
+      background: linear-gradient(135deg, var(--accent-love) 0%, var(--accent-love-light) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+    
+    .act.quit { 
+      border-color: var(--accent-quit);
+      color: var(--accent-quit); 
+      background: var(--accent-quit-soft);
+    }
+    
+    .act.quit:hover { 
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+    }
+    
+    .act.mention { 
+      border-color: var(--accent-mention);
+      color: var(--accent-mention); 
+      background: var(--accent-mention-soft);
+    }
+    
+    .act.mention:hover { 
+      background: linear-gradient(135deg, var(--accent-mention) 0%, #a78bfa 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+    }
+    
+    .act.del { 
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+    }
+    
+    .act.del:hover { 
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    }
+
+    /* ===== INBOX PAGE ===== */
+    #inboxPage { background: transparent; }
+    
+    .inbox-item { 
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); 
+      padding: 24px; 
+      margin-bottom: 20px; 
+      animation: up 300ms var(--t-bounce) both; 
+      box-shadow: var(--shadow-md);
+      transition: all var(--t);
+    }
+    
+    .inbox-item:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    
+    .inbox-from { 
+      font-size: 15px; 
+      color: var(--accent-mention); 
+      font-weight: 600; 
+      margin-bottom: 8px; 
+    }
+    
+    .inbox-text { 
+      font-size: 17px; 
+      font-weight: 500; 
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+    
+    .inbox-meta { 
+      font-size: 14px; 
+      color: var(--text-tertiary); 
+      margin-bottom: 16px; 
+    }
+    
+    .inbox-actions { 
+      display: flex; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+    }
+    
+    .inbox-sent-item { 
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); 
+      padding: 24px; 
+      margin-bottom: 20px; 
+      box-shadow: var(--shadow-md);
+      transition: all var(--t);
+    }
+    
+    .inbox-sent-item:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .sent-to { 
+      font-size: 15px; 
+      color: var(--text-secondary); 
+      margin-bottom: 8px; 
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .sent-status { 
+      font-size: 12px; 
+      font-weight: 600; 
+      padding: 5px 12px; 
+      border-radius: var(--radius-full); 
+    }
+    
+    .sent-status.pending { 
+      background: rgba(148, 163, 184, 0.15); 
+      color: var(--text-secondary); 
+      border: 1px solid rgba(148, 163, 184, 0.25); 
+    }
+    
+    .sent-status.accepted { 
+      background: var(--accent-love-soft); 
+      color: var(--accent-love); 
+      border: 1px solid rgba(245, 158, 11, 0.25); 
+    }
+    
+    .sent-status.ignored { 
+      background: rgba(148, 163, 184, 0.1); 
+      color: var(--text-tertiary); 
+      border: 1px solid rgba(148, 163, 184, 0.2); 
+    }
+
+    /* ===== MODALS ===== */
+    .modal-bg { 
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      z-index: 100; 
+      background: rgba(15, 23, 42, 0.4); 
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center; 
+      justify-content: center; 
+      padding: 24px; 
+    }
+    
+    .modal-bg.on { display: flex; animation: fadeIn 200ms ease; }
+    
+    .modal-box { 
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border-strong);
+      border-radius: var(--radius-xl); 
+      padding: 32px; 
+      width: 100%; 
+      max-width: 460px; 
+      max-height: 88vh; 
+      overflow-y: auto; 
+      box-shadow: var(--shadow-xl), 0 0 60px rgba(99, 102, 241, 0.15); 
+      animation: up 300ms var(--t-bounce) both; 
+    }
+    
+    .modal-head { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      margin-bottom: 24px; 
+    }
+    
+    .modal-title { 
+      font-family: 'Noto Serif SC', serif; 
+      font-size: 20px; 
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .modal-x { 
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 50%; 
+      width: 36px; 
+      height: 36px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      cursor: pointer; 
+      font-size: 16px; 
+      color: var(--text-tertiary); 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .modal-x:hover { 
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+      transform: rotate(90deg);
+    }
+    
+    .chip { 
+      font-size: 15px; 
+      font-weight: 500; 
+      padding: 14px 18px; 
+      border-radius: var(--radius-md); 
+      margin-bottom: 24px;
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--text-secondary);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+    }
+    
+    .chip-love { 
+      background: var(--accent-love-soft); 
+      color: var(--accent-love); 
+      border-color: rgba(245, 158, 11, 0.25); 
+    }
+    
+    .chip-quit { 
+      background: var(--accent-quit-soft); 
+      color: var(--accent-quit); 
+      border-color: rgba(6, 182, 212, 0.25); 
+    }
+    
+    .chip-mention { 
+      background: var(--accent-mention-soft); 
+      color: var(--accent-mention); 
+      border-color: rgba(139, 92, 246, 0.25); 
+    }
+    
+    .fl { 
+      font-size: 14px; 
+      font-weight: 600; 
+      color: var(--text-secondary); 
+      margin-bottom: 12px; 
+      display: block; 
+    }
+    
+    .rem-grid { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-bottom: 20px; 
+    }
+    
+    .rem-chip { 
+      padding: 12px 20px; 
+      border-radius: var(--radius-full); 
+      font-size: 14px; 
+      font-weight: 500; 
+      font-family: inherit; 
+      border: 1.5px solid var(--glass-border); 
+      background: rgba(255, 255, 255, 0.5); 
+      color: var(--text-secondary); 
+      cursor: pointer; 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .rem-chip:hover {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+    
+    .rem-chip.on { 
+      background: var(--accent-love-soft); 
+      border-color: var(--accent-love); 
+      color: var(--accent-love);
+      font-weight: 600;
+    }
+    
+    .rem-chip.required { 
+      border-color: #ef4444;
+      animation: shake 400ms ease-in-out;
+    }
+    
+    .f-ta { 
+      width: 100%; 
+      border: 1.5px solid rgba(99, 102, 241, 0.15); 
+      border-radius: var(--radius-md); 
+      background: rgba(255, 255, 255, 0.6); 
+      padding: 14px 18px; 
+      font-size: 15px; 
+      font-family: inherit; 
+      color: var(--text-primary); 
+      outline: none; 
+      resize: vertical; 
+      min-height: 100px; 
+      transition: all var(--t);
+    }
+    
+    .f-ta:hover { 
+      background: rgba(255, 255, 255, 0.8); 
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+    
+    .f-ta:focus { 
+      border-color: var(--primary-light); 
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    
+    .f-ta::placeholder { color: var(--text-tertiary); }
+    
+    .modal-foot { 
+      display: flex; 
+      gap: 12px; 
+      margin-top: 28px; 
+    }
+    
+    .btn-cancel { 
+      flex: 1; 
+      padding: 14px; 
+      border: 1.5px solid var(--glass-border); 
+      background: rgba(255, 255, 255, 0.5); 
+      border-radius: var(--radius-md); 
+      font-size: 15px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      cursor: pointer; 
+      color: var(--text-secondary); 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .btn-cancel:hover { 
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--text-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-save { 
+      flex: 2; 
+      padding: 14px; 
+      border: none; 
+      border-radius: var(--radius-md); 
+      font-size: 15px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      color: #fff; 
+      cursor: pointer; 
+      transition: all var(--t);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    
+    .btn-save:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+    }
+
+    /* ===== HISTORY ===== */
+    .hist-add { 
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--glass-border); 
+      border-radius: var(--radius-md); 
+      padding: 20px; 
+      margin-bottom: 24px; 
+      backdrop-filter: blur(10px);
+    }
+    
+    .btn-rec { 
+      margin-top: 14px; 
+      padding: 12px 24px; 
+      border-radius: var(--radius-md); 
+      font-size: 14px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      border: none;
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+      color: #fff; 
+      cursor: pointer; 
+      transition: all var(--t);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+    }
+    
+    .btn-rec:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.45);
+    }
+    
+    .hist-scroll { 
+      max-height: 280px; 
+      overflow-y: auto; 
+      padding-right: 8px;
+    }
+    
+    .hist-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .hist-scroll::-webkit-scrollbar-track {
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 3px;
+    }
+    
+    .hist-scroll::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 3px;
+    }
+    
+    .hist-row { 
+      display: flex; 
+      align-items: flex-start; 
+      gap: 14px; 
+      padding: 14px 0; 
+      border-bottom: 1px solid var(--glass-border); 
+    }
+    
+    .hist-row:last-child { border-bottom: none; }
+    
+    .hist-dot { 
+      width: 8px; 
+      height: 8px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+      margin-top: 6px; 
+      flex-shrink: 0; 
+      box-shadow: 0 0 6px var(--accent-quit);
+    }
+    
+    .hist-date { 
+      font-size: 14px; 
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .hist-note { 
+      font-size: 14px; 
+      color: var(--text-tertiary); 
+      margin-top: 4px; 
+    }
+    
+    .no-hist { 
+      font-size: 15px; 
+      color: var(--text-tertiary); 
+      text-align: center; 
+      padding: 32px 0; 
+    }
+
+    /* ===== MENTION MODAL ===== */
+    .mention-rem-grid { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-bottom: 20px; 
+    }
+    
+    .mention-rem-chip { 
+      padding: 12px 20px; 
+      border-radius: var(--radius-full); 
+      font-size: 14px; 
+      font-weight: 500; 
+      font-family: inherit; 
+      border: 1.5px solid var(--glass-border); 
+      background: rgba(255, 255, 255, 0.5); 
+      color: var(--text-secondary); 
+      cursor: pointer; 
+      transition: all var(--t);
+      backdrop-filter: blur(10px);
+    }
+    
+    .mention-rem-chip:hover {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--accent-mention);
+      color: var(--accent-mention);
+    }
+    
+    .mention-rem-chip.on { 
+      background: var(--accent-mention-soft); 
+      border-color: var(--accent-mention); 
+      color: var(--accent-mention);
+      font-weight: 600;
+    }
+
+    /* ===== TOAST ===== */
+    .toast { 
+      position: fixed; 
+      bottom: 40px; 
+      left: 50%; 
+      transform: translateX(-50%) translateY(20px); 
+      background: linear-gradient(135deg, var(--text-primary) 0%, #334155 100%);
+      color: #fff; 
+      font-size: 15px; 
+      font-weight: 500;
+      padding: 16px 28px; 
+      border-radius: var(--radius-full); 
+      opacity: 0; 
+      pointer-events: none; 
+      transition: all 300ms var(--t-bounce); 
+      z-index: 999; 
+      white-space: nowrap;
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: blur(20px);
+    }
+    
+    .toast.on { 
+      opacity: 1; 
+      transform: translateX(-50%) translateY(0); 
+    }
+    
+    .toast.err { 
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    /* ===== REPLY MODAL ===== */
+    .recv-type-sw { 
+      display: flex; 
+      background: rgba(99, 102, 241, 0.08); 
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-full); 
+      padding: 4px; 
+      gap: 4px; 
+      margin-bottom: 24px; 
+    }
+    
+    .recv-type-btn { 
+      flex: 1; 
+      padding: 14px 0; 
+      text-align: center; 
+      border-radius: var(--radius-full); 
+      font-size: 15px; 
+      font-weight: 600; 
+      font-family: inherit; 
+      border: none; 
+      background: transparent; 
+      color: var(--text-secondary); 
+      cursor: pointer; 
+      transition: all var(--t);
+    }
+    
+    .recv-type-btn.love { 
+      background: linear-gradient(135deg, var(--accent-love) 0%, var(--accent-love-light) 100%);
+      color: #fff; 
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+    
+    .recv-type-btn.quit { 
+      background: linear-gradient(135deg, var(--accent-quit) 0%, var(--accent-quit-light) 100%);
+      color: #fff; 
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+    }
+
+    /* ===== RESPONSIVE - Mobile ===== */
+    @media (max-width: 768px) {
+      .auth-wrap {
+        padding: 36px 24px 28px;
+        margin: 16px;
+      }
+      
+      .auth-brand {
+        font-size: 28px;
+      }
+      
+      .topbar { 
+        padding: 14px 16px; 
+      }
+      
+      .topbar-brand { 
+        font-size: 18px; 
+      }
+      
+      .badge { 
+        display: none;
+      }
+      
+      .tb-btn { 
+        padding: 8px 14px; 
+        font-size: 13px; 
+      }
+      
+      .notif-btn { 
+        padding: 8px 12px; 
+      }
+      
+      .nav-tabs { 
+        padding: 12px 16px 0;
+      }
+      
+      .nav-tab { 
+        padding: 10px 16px; 
+        font-size: 14px;
+      }
+      
+      .nav-tab.on::after {
+        bottom: -12px;
+      }
+      
+      .content { 
+        padding: 16px; 
+      }
+      
+      .add-box { 
+        padding: 20px; 
+        margin-bottom: 20px;
+      }
+      
+      .type-row { 
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      
+      .add-row { 
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .add-inp { 
+        width: 100%;
+        padding: 14px 16px;
+      }
+      
+      .btn-add { 
+        width: 100%;
+        padding: 14px;
+      }
+      
+      .cols { 
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .col-head { 
+        padding: 16px 20px; 
+      }
+      
+      .col-title { 
+        font-size: 16px; 
+      }
+      
+      .col-body { 
+        padding: 16px; 
+      }
+      
+      .tc-inner { 
+        padding: 16px; 
+        flex-direction: column;
+        gap: 14px;
+      }
+      
+      .tc-acts { 
+        flex-direction: row;
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .act { 
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+      
+      .tc-text { 
+        font-size: 15px; 
+      }
+      
+      .inbox-item, .inbox-sent-item { 
+        padding: 20px; 
+        margin-bottom: 16px;
+      }
+      
+      .inbox-text { 
+        font-size: 15px; 
+      }
+      
+      .inbox-actions { 
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      
+      .modal-bg { 
+        padding: 16px; 
+        align-items: flex-end;
+      }
+      
+      .modal-box { 
+        max-height: 85vh;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        animation: slideUp 350ms var(--t-bounce) both;
+        padding: 24px;
+      }
+      
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(100%); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .modal-title { 
+        font-size: 18px; 
+      }
+      
+      .rem-chip, .mention-rem-chip { 
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+      
+      .toast { 
+        font-size: 14px; 
+        padding: 14px 22px;
+        max-width: 90vw;
+        white-space: normal;
+        text-align: center;
+        bottom: 24px;
+      }
+      
+      .topbar-right { 
+        gap: 8px; 
+      }
+    }
+    
+    /* Extra small devices */
+    @media (max-width: 480px) {
+      .content {
+        padding: 12px;
+      }
+      
+      .add-box {
+        padding: 16px;
+      }
+      
+      .col-body {
+        padding: 12px;
+      }
+      
+      .tc {
+        margin-bottom: 12px;
+      }
+      
+      .tc-inner {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH PAGE -->
+<div id="authPage" class="page on">
+  <div class="auth-wrap">
+    <div class="auth-brand">不做清单</div>
+    <div class="auth-sub">记录你爱做的，和你要戒掉的</div>
+    <div class="tabs">
+      <button class="tab-btn on" id="tLogin" onclick="switchTab('login')">登录</button>
+      <button class="tab-btn" id="tReg" onclick="switchTab('reg')">注册</button>
+    </div>
+    <div id="authErr" class="err-box"></div>
+    <div id="loginPanel">
+      <div class="field"><label class="field-label">用户名</label><input id="lUser" class="f-input" type="text" placeholder="your-username" autocomplete="username"/></div>
+      <div class="field"><label class="field-label">密码</label><input id="lPass" class="f-input" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button id="lBtn" class="btn-main" onclick="doLogin()">登录</button>
+    </div>
+    <div id="regPanel" style="display:none">
+      <div class="field"><label class="field-label">用户名</label><input id="rUser" class="f-input" type="text" placeholder="your-username" autocomplete="username"/></div>
+      <div class="field"><label class="field-label">密码（至少 6 位）</label><input id="rPass" class="f-input" type="password" placeholder="••••••••" autocomplete="new-password"/></div>
+      <button id="rBtn" class="btn-main" onclick="doRegister()">注册</button>
+    </div>
+    <p class="auth-note">输入用户名即可，不发送邮件验证</p>
+  </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div id="mainPage" class="page">
+  <div class="topbar">
+    <div class="topbar-brand">不做清单</div>
+    <div class="topbar-right">
+      <span class="badge" id="uBadge"></span>
+      <button class="notif-btn" onclick="switchNav('inbox')" title="收件箱">
+        📬 <span id="inboxCountBadge" style="font-size:11px;display:none"></span>
+        <span class="notif-dot" id="notifDot"></span>
+      </button>
+      <button class="tb-btn" onclick="doClear()">清空</button>
+      <button class="tb-btn danger" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab on" id="navHome" onclick="switchNav('home')">清单</button>
+    <button class="nav-tab" id="navSent" onclick="switchNav('sent')">已发送 @</button>
+    <button class="nav-tab" id="navInbox" onclick="switchNav('inbox')">
+      收到的 @ <span id="inboxBadge" style="display:none;font-size:10px;background:var(--accent-love);color:#fff;padding:2px 6px;border-radius:100px;margin-left:4px"></span>
+    </button>
+  </div>
+
+  <!-- HOME -->
+  <div id="homeView" class="content">
+    <div class="add-box">
+      <div class="type-row">
+        <span class="type-row-label">分类</span>
+        <div class="type-sw">
+          <button class="type-sw-btn love" id="swLove" onclick="setType('love')">爱做</button>
+          <button class="type-sw-btn" id="swQuit" onclick="setType('quit')">不做</button>
+        </div>
+      </div>
+      <div class="add-row">
+        <input id="addInp" class="add-inp" type="text" maxlength="200" placeholder="输入一件你爱做的事..." autocomplete="off"/>
+        <button id="addBtn" class="btn-add" style="background:var(--accent-love)" onclick="handleAdd()">添加</button>
+      </div>
+      <div class="add-tip" id="addTip">爱做：记录你喜欢持续做的事，可设置提醒</div>
+    </div>
+    <div class="cols">
+      <div class="col-card">
+        <div class="col-head">
+          <div class="col-title"><span class="dot dot-love"></span>爱做</div>
+          <span class="col-ct" id="loveCt">0</span>
+        </div>
+        <div class="col-body">
+          <div id="loveList"></div>
+          <div id="loveEmpty" class="empty">还没有，去添加一个</div>
+        </div>
+      </div>
+      <div class="col-card">
+        <div class="col-head">
+          <div class="col-title"><span class="dot dot-quit"></span>不做</div>
+          <span class="col-ct" id="quitCt">0</span>
+        </div>
+        <div class="col-body">
+          <div id="quitList"></div>
+          <div id="quitEmpty" class="empty">还没有，去添加一个</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENT -->
+  <div id="sentView" class="content" style="display:none">
+    <div style="font-family:'Noto Serif SC',serif;font-size:18px;font-weight:600;margin-bottom:20px;color:var(--text-primary)">我发出的 @</div>
+    <div id="sentList"></div>
+    <div id="sentEmpty" class="empty" style="padding:48px 0">还没有发出过 @ 分享</div>
+  </div>
+
+  <!-- INBOX -->
+  <div id="inboxView" class="content" style="display:none">
+    <div style="font-family:'Noto Serif SC',serif;font-size:18px;font-weight:600;margin-bottom:20px;color:var(--text-primary)">收到的 @</div>
+    <div id="inboxList"></div>
+    <div id="inboxEmpty" class="empty" style="padding:48px 0">暂时没有收到 @ 分享</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Reminder Modal -->
+<div class="modal-bg" id="remModal">
+  <div class="modal-box">
+    <div class="modal-head"><div class="modal-title">设置提醒</div><button class="modal-x" onclick="closeM('remModal')">✕</button></div>
+    <div id="remChip" class="chip chip-love"></div>
+    <label class="fl">提醒时间（必选）</label>
+    <div class="rem-grid" id="remGrid">
+      <button class="rem-chip" data-val="15m">一刻钟后</button>
+      <button class="rem-chip" data-val="1d">一天后</button>
+      <button class="rem-chip" data-val="1w">一周后</button>
+      <button class="rem-chip" data-val="1y">一年后</button>
+      <button class="rem-chip" data-val="jieqi">下个节气</button>
+    </div>
+    <div id="remTimePreview" style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px;min-height:20px;font-weight:500;"></div>
+    <label class="fl">备注</label>
+    <textarea id="remNote" class="f-ta" placeholder="写点什么..."></textarea>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeM('remModal')">取消</button>
+      <button class="btn-save" style="background:var(--accent-love)" onclick="saveRem()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-bg" id="histModal">
+  <div class="modal-box">
+    <div class="modal-head"><div class="modal-title">不做历史</div><button class="modal-x" onclick="closeM('histModal')">✕</button></div>
+    <div id="histChip" class="chip chip-quit"></div>
+    <div class="hist-add">
+      <label class="fl">记录这次不做</label>
+      <textarea id="histNote" class="f-ta" placeholder="备注（可选）..." style="min-height:80px"></textarea>
+      <button class="btn-rec" onclick="addHist()">记录</button>
+    </div>
+    <label class="fl">历史</label>
+    <div class="hist-scroll" id="histList"></div>
+    <div class="modal-foot"><button class="btn-cancel" style="flex:1" onclick="closeM('histModal')">关闭</button></div>
+  </div>
+</div>
+
+<!-- @ Mention Send Modal -->
+<div class="modal-bg" id="mentionModal">
+  <div class="modal-box">
+    <div class="modal-head"><div class="modal-title">@ 分享给朋友</div><button class="modal-x" onclick="closeM('mentionModal')">✕</button></div>
+    <div id="mentionTaskChip" class="chip chip-love"></div>
+    <div class="field">
+      <label class="field-label">@ 用户名</label>
+      <input id="mentionTarget" class="f-input" type="text" placeholder="输入对方用户名" autocomplete="off"/>
+    </div>
+    <label class="fl">提醒时间（必选，决定@何时过期）</label>
+    <div class="mention-rem-grid" id="mentionRemGrid">
+      <button class="mention-rem-chip" data-val="15m">一刻钟后</button>
+      <button class="mention-rem-chip" data-val="1d">一天后</button>
+      <button class="mention-rem-chip" data-val="1w">一周后</button>
+      <button class="mention-rem-chip" data-val="1y">一年后</button>
+      <button class="mention-rem-chip" data-val="jieqi">下个节气</button>
+    </div>
+    <div id="mentionTimePreview" style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px;min-height:20px;font-weight:500;"></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeM('mentionModal')">取消</button>
+      <button class="btn-save" style="background:var(--accent-mention)" onclick="sendMention()">发送 @</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inbox Reply Modal -->
+<div class="modal-bg" id="replyModal">
+  <div class="modal-box">
+    <div class="modal-head"><div class="modal-title">处理 @ 邀请</div><button class="modal-x" onclick="closeM('replyModal')">✕</button></div>
+    <div id="replyChip" class="chip chip-mention"></div>
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;font-weight:500;">选择加入方式：</p>
+    <div class="recv-type-sw" id="replyTypeSw">
+      <button class="recv-type-btn love" id="replyLoveBtn" onclick="setReplyType('love')">爱做</button>
+      <button class="recv-type-btn" id="replyQuitBtn" onclick="setReplyType('quit')">不做</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeM('replyModal')">忽略</button>
+      <button class="btn-save" style="background:var(--accent-mention)" onclick="acceptMention()">加入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* 节气精确计算（天文算法） */
+const JIEQI_NAMES = [
+  '小寒','大寒','立春','雨水','惊蛰','春分',
+  '清明','谷雨','立夏','小满','芒种','夏至',
+  '小暑','大暑','立秋','处暑','白露','秋分',
+  '寒露','霜降','立冬','小雪','大雪','冬至'
+];
+
+function solarTermJD(year, n) {
+  const angles = [285,300,315,330,345,0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270];
+  const angle = angles[n];
+  const k = (year - 2000) * 365.25 / 365.25;
+  let jd = 2451545.0 + (angle / 360) * 365.25 + k * 365.25;
+
+  for (let i = 0; i < 50; i++) {
+    const lambda = sunLongitude(jd);
+    let diff = angle - lambda;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    const dt = diff / 360 * 365.25;
+    jd += dt;
+    if (Math.abs(dt) < 0.00001) break;
+  }
+  return jd;
+}
+
+function sunLongitude(jd) {
+  const T = (jd - 2451545.0) / 36525.0;
+  const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+  const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * Math.PI / 180;
+  const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M)
+           + (0.019993 - 0.000101 * T) * Math.sin(2 * M)
+           + 0.000289 * Math.sin(3 * M);
+  const sunLon = L0 + C;
+  const omega = (125.04 - 1934.136 * T) * Math.PI / 180;
+  const lambda = sunLon - 0.00569 - 0.00478 * Math.sin(omega);
+  return ((lambda % 360) + 360) % 360;
+}
+
+function jdToDate(jd) {
+  const ms = (jd - 2440587.5) * 86400000;
+  return new Date(ms);
+}
+
+function nextJieqiDate() {
+  const now = new Date();
+  const jdNow = 2440587.5 + now.getTime() / 86400000;
+  const year = now.getFullYear();
+
+  let best = null;
+  let bestName = '';
+  for (let y = year; y <= year + 1; y++) {
+    for (let n = 0; n < 24; n++) {
+      const jd = solarTermJD(y, n);
+      if (jd > jdNow + 0.001) {
+        if (!best || jd < best) {
+          best = jd;
+          bestName = JIEQI_NAMES[n];
+        }
+      }
+    }
+  }
+  return { date: jdToDate(best), name: bestName };
+}
+
+function calcReminderTime(type) {
+  const now = new Date();
+  switch (type) {
+    case '15m': return new Date(now.getTime() + 15 * 60 * 1000);
+    case '1d':  return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    case '1w':  return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    case '1y':  return new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    case 'jieqi': return nextJieqiDate().date;
+    default: return null;
+  }
+}
+
+function formatReminderPreview(type) {
+  const d = calcReminderTime(type);
+  if (!d) return '';
+  if (type === 'jieqi') {
+    const { name } = nextJieqiDate();
+    return '将在「' + name + '」提醒：' + fmtDatetime(d);
+  }
+  return '提醒时间：' + fmtDatetime(d);
+}
+
+function fmtDatetime(d) {
+  return d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+}
+function p2(n) { return String(n).padStart(2,'0'); }
+
+/* 浏览器通知 */
+let notifPermission = 'default';
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  notifPermission = await Notification.requestPermission();
+}
+
+function scheduleNotif(title, body, at) {
+  const delay = at.getTime() - Date.now();
+  if (delay <= 0) return;
+  if (delay > 2147483647) {
+    storeScheduledNotif(title, body, at);
+    return;
+  }
+  setTimeout(() => {
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/favicon.ico' });
+    }
+  }, delay);
+  storeScheduledNotif(title, body, at);
+}
+
+function storeScheduledNotif(title, body, at) {
+  const key = 'buzuo_notifs';
+  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  existing.push({ title, body, at: at.toISOString() });
+  localStorage.setItem(key, JSON.stringify(existing));
+}
+
+function checkStoredNotifs() {
+  const key = 'buzuo_notifs';
+  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  const now = Date.now();
+  const remaining = [];
+  existing.forEach(n => {
+    const at = new Date(n.at).getTime();
+    const delay = at - now;
+    if (delay <= 0) {
+      if (now - at < 3600000 && Notification.permission === 'granted') {
+        new Notification(n.title, { body: n.body, icon: '/favicon.ico' });
+      }
+    } else if (delay <= 2147483647) {
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification(n.title, { body: n.body, icon: '/favicon.ico' });
+        }
+      }, delay);
+      remaining.push(n);
+    } else {
+      remaining.push(n);
+    }
+  });
+  localStorage.setItem(key, JSON.stringify(remaining));
+}
+
+/* Supabase */
+const SUPABASE_URL = 'https://kzmoizjjvxzmodfwnhjx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bW9pempqdnh6bW9kZnduaGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTU2NzcsImV4cCI6MjA4OTg5MTY3N30.63XVVFp9lyF-qQ7yjjbTJ1geFJp3zs1bKZ0du6E7gdU';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* App State */
+let user = null, username = '';
+let tasks = [], mentions_inbox = [], mentions_sent = [];
+let addType = 'love';
+let remTaskId = null, remVal = null;
+let histTaskId = null;
+let mentionTaskId = null, mentionRemVal = null;
+let replyMentionId = null, replyType = 'quit';
+let busy = false;
+let realtimeChan = null;
+
+const g = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* Toast */
+let tTimer;
+function toast(msg, isErr = false) {
+  const el = g('toast');
+  el.textContent = msg;
+  el.className = 'toast on' + (isErr ? ' err' : '');
+  clearTimeout(tTimer);
+  tTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+
+/* Page / Nav */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  g(name + 'Page').classList.add('on');
+}
+
+function switchNav(tab) {
+  ['home','sent','inbox'].forEach(t => {
+    g(t+'View').style.display = t === tab ? '' : 'none';
+    g('nav' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('on', t === tab);
+  });
+  if (tab === 'sent') loadSent();
+  if (tab === 'inbox') { loadInbox(); clearInboxBadge(); }
+}
+
+/* Auth */
+const SUFFIX = '@user.buzuo.local';
+const toEmail = u => u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'') + SUFFIX;
+const validU = u => /^[a-z0-9][a-z0-9._-]{2,31}$/.test(u.trim().toLowerCase());
+
+function friendlyErr(err) {
+  const m = String(err?.message || '').toLowerCase();
+  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('disconnected')) return '网络连接失败，请检查网络后重试';
+  if (m.includes('rate limit')) return '请求过于频繁，请稍后再试';
+  if (m.includes('invalid login credentials')) return '用户名或密码错误';
+  if (m.includes('user already registered')) return '该用户已注册，请直接登录';
+  return err?.message || '未知错误，请重试';
+}
+
+function switchTab(t) {
+  const isL = t === 'login';
+  g('tLogin').classList.toggle('on', isL);
+  g('tReg').classList.toggle('on', !isL);
+  g('loginPanel').style.display = isL ? '' : 'none';
+  g('regPanel').style.display = isL ? 'none' : '';
+  g('authErr').className = 'err-box';
+}
+
+function showErr(msg) { const e = g('authErr'); e.textContent = msg; e.className = 'err-box on'; }
+
+function setBusy(b) {
+  busy = b;
+  g('lBtn').disabled = b; g('lBtn').textContent = b ? '登录中...' : '登录';
+  g('rBtn').disabled = b; g('rBtn').textContent = b ? '注册中...' : '注册';
+}
+
+async function doLogin() {
+  if (busy) return;
+  g('authErr').className = 'err-box';
+  const raw = g('lUser').value.trim();
+  const pass = g('lPass').value;
+  if (!validU(raw)) { showErr('用户名格式无效（3-32位字母数字）'); return; }
+  if (!pass) { showErr('请输入密码'); return; }
+  setBusy(true);
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email: toEmail(raw), password: pass });
+    if (error) throw error;
+  } catch (e) { showErr(friendlyErr(e)); } finally { setBusy(false); }
+}
+
+async function doRegister() {
+  if (busy) return;
+  g('authErr').className = 'err-box';
+  const raw = g('rUser').value.trim();
+  const pass = g('rPass').value;
+  if (!validU(raw)) { showErr('用户名格式无效（3-32位字母数字）'); return; }
+  if (!pass || pass.length < 6) { showErr('密码至少 6 位'); return; }
+  const uname = raw.trim().toLowerCase();
+  setBusy(true);
+  try {
+    const { data, error } = await sb.auth.signUp({ email: toEmail(uname), password: pass, options: { data: { username: uname } } });
+    if (error) throw error;
+    if (data.user) { await sb.from('profiles').upsert({ user_id: data.user.id, username: uname }); }
+    else { showErr('注册已提交，请切换登录'); }
+  } catch (e) { showErr(friendlyErr(e)); } finally { setBusy(false); }
+}
+
+['lUser','lPass'].forEach(id => g(id).addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); }));
+['rUser','rPass'].forEach(id => g(id).addEventListener('keydown', e => { if (e.key==='Enter') doRegister(); }));
+
+/* Main App */
+function setType(t) {
+  addType = t;
+  g('swLove').className = 'type-sw-btn' + (t==='love' ? ' love' : '');
+  g('swQuit').className = 'type-sw-btn' + (t==='quit' ? ' quit' : '');
+  g('addBtn').style.background = t==='love' ? 'var(--accent-love)' : 'var(--accent-quit)';
+  g('addInp').placeholder = t==='love' ? '输入一件你爱做的事...' : '输入一件你要戒掉的事...';
+  g('addTip').textContent = t==='love' ? '爱做：记录你喜欢持续做的事，可设置提醒' : '不做：记录你要戒掉的习惯，每次抵制都可记录';
+}
+
+async function loadTasks() {
+  if (!user) return;
+  const { data, error } = await sb.from('tasks').select('*').eq('user_id', user.id);
+  if (error) { toast(friendlyErr(error), true); return; }
+  tasks = (data||[]).map(t => ({ ...t, createdAt: +new Date(t.created_at), updatedAt: +new Date(t.updated_at) }));
+  tasks.forEach(t => {
+    if (t.reminder_at && t.task_type === 'love') {
+      const at = new Date(t.reminder_at);
+      if (at > new Date()) scheduleNotif('爱做提醒', t.text, at);
+    }
+  });
+  render();
+}
+
+const remLabel = { '15m':'一刻钟后','1d':'一天后','1w':'一周后','1y':'一年后','jieqi':'下个节气' };
+
+function render() {
+  const love = tasks.filter(t => t.task_type==='love').sort((a,b) => a.createdAt - b.createdAt);
+  const quit = tasks.filter(t => t.task_type==='quit' || !t.task_type).sort((a,b) => a.createdAt - b.createdAt);
+  g('loveCt').textContent = love.length;
+  g('quitCt').textContent = quit.length;
+  g('loveList').innerHTML = '';
+  g('quitList').innerHTML = '';
+  g('loveEmpty').style.display = love.length ? 'none' : '';
+  g('quitEmpty').style.display = quit.length ? 'none' : '';
+  love.forEach(t => g('loveList').appendChild(makeLove(t)));
+  quit.forEach(t => g('quitList').appendChild(makeQuit(t)));
+}
+
+function makeLove(t) {
+  const d = document.createElement('div');
+  d.className = 'tc tc-love';
+  const hasRem = t.reminder_at && new Date(t.reminder_at) > new Date();
+  const remD = hasRem ? new Date(t.reminder_at) : null;
+  d.innerHTML = '<div class="tc-inner">' +
+    '<div class="tc-body">' +
+      '<div class="tc-text">' + esc(t.text) + '</div>' +
+      (t.reminder_type ? '<span class="rem-tag">' + (remLabel[t.reminder_type]||t.reminder_type) + (remD?' · '+fmtDatetime(remD):'') + '</span>' : '') +
+      (t.notes ? '<div class="tc-meta">' + esc(t.notes) + '</div>' : '') +
+      (t._mention_accepted ? '<span class="mention-tag">已有人接受 @</span>' : '') +
+    '</div>' +
+    '<div class="tc-acts">' +
+      '<button class="act love" onclick="openRem(\'' + t.id + '\')">提醒</button>' +
+      '<button class="act mention" onclick="openMention(\'' + t.id + '\')">@分享</button>' +
+      '<button class="act del" onclick="delTask(\'' + t.id + '\')">删除</button>' +
+    '</div>' +
+  '</div>';
+  return d;
+}
+
+function makeQuit(t) {
+  const d = document.createElement('div');
+  d.className = 'tc tc-quit';
+  const cnt = t.undo_count||0;
+  d.innerHTML = '<div class="tc-inner">' +
+    '<div class="tc-body">' +
+      '<div class="tc-text">' + esc(t.text) + '</div>' +
+      '<div class="tc-meta">已记录 <b style="color:var(--accent-quit)">' + cnt + '</b> 次不做</div>' +
+      (t._mention_accepted ? '<span class="mention-tag">已有人接受 @</span>' : '') +
+    '</div>' +
+    '<div class="tc-acts">' +
+      '<button class="act quit" onclick="openHist(\'' + t.id + '\')">历史</button>' +
+      '<button class="act mention" onclick="openMention(\'' + t.id + '\')">@分享</button>' +
+      '<button class="act del" onclick="delTask(\'' + t.id + '\')">删除</button>' +
+    '</div>' +
+  '</div>';
+  return d;
+}
+
+async function handleAdd() {
+  const text = g('addInp').value.trim();
+  if (!text) { g('addInp').focus(); return; }
+  const { data, error } = await sb.from('tasks').insert({ user_id: user.id, text, status:'plan', task_type: addType, undo_count:0 }).select().single();
+  if (error) { toast(friendlyErr(error), true); return; }
+  tasks.push({ ...data, createdAt: Date.now(), updatedAt: Date.now() });
+  g('addInp').value = '';
+  render();
+}
+g('addInp').addEventListener('keydown', e => { if (e.key==='Enter') handleAdd(); });
+
+async function delTask(id) {
+  if (!confirm('确认删除？')) return;
+  const { error } = await sb.from('tasks').delete().eq('id', id);
+  if (error) { toast(friendlyErr(error), true); return; }
+  tasks = tasks.filter(t => t.id !== id);
+  render();
+}
+
+async function doLogout() { await sb.auth.signOut(); }
+async function doClear() {
+  if (!confirm('清空所有事项？')) return;
+  const { error } = await sb.from('tasks').delete().eq('user_id', user.id);
+  if (error) { toast(friendlyErr(error), true); return; }
+  tasks = []; render();
+}
+
+/* Modals */
+function openM(id) { g(id).classList.add('on'); }
+function closeM(id) { g(id).classList.remove('on'); }
+
+/* Reminder Modal */
+function openRem(taskId) {
+  remTaskId = taskId; remVal = null;
+  const t = tasks.find(x => x.id===taskId); if (!t) return;
+  g('remChip').textContent = t.text;
+  g('remChip').className = 'chip ' + (t.task_type==='love' ? 'chip-love' : 'chip-quit');
+  g('remNote').value = t.notes||'';
+  g('remTimePreview').textContent = '';
+  document.querySelectorAll('#remGrid .rem-chip').forEach(b => {
+    const sel = b.dataset.val === t.reminder_type;
+    b.classList.toggle('on', sel);
+    if (sel) { remVal = t.reminder_type; g('remTimePreview').textContent = formatReminderPreview(remVal); }
+  });
+  openM('remModal');
+}
+
+g('remGrid').addEventListener('click', e => {
+  const b = e.target.closest('.rem-chip'); if (!b) return;
+  document.querySelectorAll('#remGrid .rem-chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); remVal = b.dataset.val;
+  g('remTimePreview').textContent = formatReminderPreview(remVal);
+});
+
+async function saveRem() {
+  if (!remTaskId) return;
+  if (!remVal) { document.querySelectorAll('#remGrid .rem-chip').forEach(b => b.classList.add('required')); toast('请选择提醒时间', true); return; }
+  const note = g('remNote').value.trim();
+  const remAt = calcReminderTime(remVal);
+  const { error } = await sb.from('tasks').update({ reminder_type: remVal, reminder_at: remAt.toISOString(), notes: note||null, updated_at: new Date().toISOString() }).eq('id', remTaskId);
+  if (error) { toast(friendlyErr(error), true); return; }
+  const t = tasks.find(x => x.id===remTaskId);
+  if (t) { t.reminder_type = remVal; t.reminder_at = remAt.toISOString(); t.notes = note; }
+  const taskText = t ? t.text : '';
+  scheduleNotif('爱做提醒', taskText, remAt);
+  if (Notification.permission !== 'granted') {
+    await requestNotifPermission();
+    if (Notification.permission === 'granted') scheduleNotif('爱做提醒', taskText, remAt);
+  }
+  closeM('remModal'); render(); toast('提醒已设置：' + fmtDatetime(remAt));
+}
+
+/* History Modal */
+async function openHist(taskId) {
+  histTaskId = taskId;
+  const t = tasks.find(x => x.id===taskId); if (!t) return;
+  g('histChip').textContent = t.text;
+  g('histNote').value = '';
+  await loadHist(taskId);
+  openM('histModal');
+}
+
+async function loadHist(taskId) {
+  const { data, error } = await sb.from('task_history').select('*').eq('task_id', taskId).order('created_at', { ascending: false });
+  const el = g('histList');
+  if (error || !data || !data.length) { el.innerHTML = '<div class="no-hist">还没有记录</div>'; return; }
+  el.innerHTML = '';
+  data.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'hist-row';
+    const d = new Date(r.created_at);
+    div.innerHTML = '<div class="hist-dot"></div><div><div class="hist-date">' + fmtDatetime(d) + '</div>' + (r.note?'<div class="hist-note">' + esc(r.note) + '</div>':'') + '</div>';
+    el.appendChild(div);
+  });
+}
+
+async function addHist() {
+  if (!histTaskId) return;
+  const note = g('histNote').value.trim();
+  const { error } = await sb.from('task_history').insert({ task_id: histTaskId, user_id: user.id, note: note||null });
+  if (error) { toast(friendlyErr(error), true); return; }
+  const t = tasks.find(x => x.id===histTaskId);
+  const newCnt = (t?.undo_count||0) + 1;
+  await sb.from('tasks').update({ undo_count: newCnt, updated_at: new Date().toISOString() }).eq('id', histTaskId);
+  if (t) t.undo_count = newCnt;
+  g('histNote').value = '';
+  await loadHist(histTaskId);
+  render(); toast('已记录这次不做');
+}
+
+/* @ Mention Modal */
+function openMention(taskId) {
+  mentionTaskId = taskId; mentionRemVal = null;
+  const t = tasks.find(x => x.id===taskId); if (!t) return;
+  g('mentionTaskChip').textContent = t.text;
+  g('mentionTaskChip').className = 'chip ' + (t.task_type==='love' ? 'chip-love' : 'chip-quit');
+  g('mentionTarget').value = '';
+  g('mentionTimePreview').textContent = '';
+  document.querySelectorAll('#mentionRemGrid .mention-rem-chip').forEach(b => b.classList.remove('on'));
+  openM('mentionModal');
+}
+
+g('mentionRemGrid').addEventListener('click', e => {
+  const b = e.target.closest('.mention-rem-chip'); if (!b) return;
+  document.querySelectorAll('#mentionRemGrid .mention-rem-chip').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); mentionRemVal = b.dataset.val;
+  g('mentionTimePreview').textContent = formatReminderPreview(mentionRemVal);
+});
+
+async function sendMention() {
+  if (!mentionTaskId) return;
+  const toUser = g('mentionTarget').value.trim().toLowerCase();
+  if (!toUser) { toast('@用户名不能为空', true); return; }
+  if (!mentionRemVal) { toast('请选择过期时间', true); return; }
+  if (toUser === username) { toast('不能 @ 自己', true); return; }
+
+  const t = tasks.find(x => x.id===mentionTaskId); if (!t) return;
+  const expiresAt = calcReminderTime(mentionRemVal);
+
+  const { data: profileData } = await sb.from('profiles').select('user_id').eq('username', toUser).single();
+  const toUserId = profileData?.user_id || null;
+
+  const { error } = await sb.from('mentions').insert({
+    from_user_id: user.id,
+    to_username: toUser,
+    to_user_id: toUserId,
+    task_id: mentionTaskId,
+    task_text: t.text,
+    task_type: t.task_type,
+    from_username: username,
+    status: 'pending',
+    expires_at: expiresAt.toISOString()
+  });
+  if (error) { toast(friendlyErr(error), true); return; }
+  closeM('mentionModal');
+  toast('已 @ ' + toUser + '，过期于 ' + fmtDatetime(expiresAt));
+}
+
+/* Inbox */
+async function loadInbox() {
+  if (!user) return;
+  const now = new Date().toISOString();
+  const { data, error } = await sb.from('mentions')
+    .select('*')
+    .eq('to_user_id', user.id)
+    .eq('status', 'pending')
+    .gt('expires_at', now)
+    .order('created_at', { ascending: false });
+  if (error) { toast(friendlyErr(error), true); return; }
+  mentions_inbox = data || [];
+  renderInbox();
+}
+
+function renderInbox() {
+  const el = g('inboxList');
+  el.innerHTML = '';
+  g('inboxEmpty').style.display = mentions_inbox.length ? 'none' : '';
+  mentions_inbox.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'inbox-item';
+    const expiry = new Date(m.expires_at);
+    div.innerHTML = 
+      '<div class="inbox-from">@来自 ' + esc(m.from_username) + '</div>' +
+      '<div class="inbox-text">' + (m.task_type==='love'?'爱做':'不做') + '：' + esc(m.task_text) + '</div>' +
+      '<div class="inbox-meta">过期：' + fmtDatetime(expiry) + '</div>' +
+      '<div class="inbox-actions">' +
+        '<button class="act love" onclick="openReply(\'' + m.id + '\',\'love\')">加入爱做</button>' +
+        '<button class="act quit" onclick="openReply(\'' + m.id + '\',\'quit\')">加入不做</button>' +
+        '<button class="act del" onclick="ignoreMention(\'' + m.id + '\')">忽略</button>' +
+      '</div>';
+    el.appendChild(div);
+  });
+  updateInboxBadge();
+}
+
+function updateInboxBadge() {
+  const cnt = mentions_inbox.length;
+  const badge = g('inboxBadge');
+  const dot = g('notifDot');
+  if (cnt > 0) {
+    badge.textContent = cnt; badge.style.display = '';
+    dot.classList.add('on');
+  } else {
+    badge.style.display = 'none';
+    dot.classList.remove('on');
+  }
+}
+
+function clearInboxBadge() {
+  g('notifDot').classList.remove('on');
+}
+
+function openReply(mentionId, defaultType) {
+  replyMentionId = mentionId;
+  replyType = defaultType;
+  const m = mentions_inbox.find(x => x.id===mentionId); if (!m) return;
+  g('replyChip').textContent = '来自 @' + m.from_username + '：' + m.task_text;
+  setReplyType(defaultType);
+  openM('replyModal');
+}
+
+function setReplyType(t) {
+  replyType = t;
+  g('replyLoveBtn').className = 'recv-type-btn' + (t==='love' ? ' love' : '');
+  g('replyQuitBtn').className = 'recv-type-btn' + (t==='quit' ? ' quit' : '');
+}
+
+async function acceptMention() {
+  if (!replyMentionId) return;
+  const m = mentions_inbox.find(x => x.id===replyMentionId); if (!m) return;
+
+  const { data: newTask, error: taskErr } = await sb.from('tasks').insert({
+    user_id: user.id, text: m.task_text,
+    status: 'plan', task_type: replyType, undo_count: 0
+  }).select().single();
+  if (taskErr) { toast(friendlyErr(taskErr), true); return; }
+
+  const newStatus = replyType==='love' ? 'accepted_love' : 'accepted_quit';
+  await sb.from('mentions').update({ status: newStatus, responded_at: new Date().toISOString() }).eq('id', replyMentionId);
+
+  tasks.push({ ...newTask, createdAt: Date.now(), updatedAt: Date.now() });
+  mentions_inbox = mentions_inbox.filter(x => x.id !== replyMentionId);
+  closeM('replyModal'); render(); renderInbox();
+  toast('已加入' + (replyType==='love'?'爱做':'不做') + '，对方将收到通知');
+}
+
+async function ignoreMention(id) {
+  await sb.from('mentions').update({ status: 'ignored', responded_at: new Date().toISOString() }).eq('id', id);
+  mentions_inbox = mentions_inbox.filter(x => x.id !== id);
+  renderInbox();
+  toast('已忽略');
+}
+
+/* Sent */
+async function loadSent() {
+  if (!user) return;
+  const { data, error } = await sb.from('mentions').select('*').eq('from_user_id', user.id).order('created_at', { ascending: false });
+  if (error) { toast(friendlyErr(error), true); return; }
+  mentions_sent = data || [];
+  renderSent();
+}
+
+function renderSent() {
+  const el = g('sentList');
+  el.innerHTML = '';
+  g('sentEmpty').style.display = mentions_sent.length ? 'none' : '';
+  const now = new Date();
+  mentions_sent.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'inbox-sent-item';
+    const expired = new Date(m.expires_at) < now;
+    let statusLabel = '待处理';
+    let statusClass = 'pending';
+    if (m.status === 'accepted_love') { statusLabel = '对方加入了爱做'; statusClass = 'accepted'; }
+    else if (m.status === 'accepted_quit') { statusLabel = '对方加入了不做'; statusClass = 'accepted'; }
+    else if (m.status === 'ignored') { statusLabel = '对方已忽略'; statusClass = 'ignored'; }
+    else if (expired) { statusLabel = '已过期'; statusClass = 'ignored'; }
+    div.innerHTML = 
+      '<div class="sent-to">→ @' + esc(m.to_username) + ' <span class="sent-status ' + statusClass + '">' + statusLabel + '</span></div>' +
+      '<div class="tc-text" style="margin:10px 0">' + (m.task_type==='love'?'爱做':'不做') + '：' + esc(m.task_text) + '</div>' +
+      '<div style="font-size:13px;color:var(--text-tertiary)">发送于 ' + fmtDatetime(new Date(m.created_at)) + ' · 过期 ' + fmtDatetime(new Date(m.expires_at)) + '</div>';
+    el.appendChild(div);
+  });
+}
+
+/* Realtime */
+function setupRealtime() {
+  if (realtimeChan) { sb.removeChannel(realtimeChan); }
+  realtimeChan = sb.channel('mentions-' + user.id)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'mentions',
+      filter: 'to_user_id=eq.' + user.id
+    }, payload => {
+      const m = payload.new;
+      mentions_inbox.unshift(m);
+      renderInbox();
+      if (Notification.permission === 'granted') {
+        new Notification('收到 @ 邀请', { body: m.from_username + ' 分享了：' + m.task_text });
+      } else {
+        toast(m.from_username + ' @ 了你：' + m.task_text);
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'mentions',
+      filter: 'from_user_id=eq.' + user.id
+    }, payload => {
+      const m = payload.new;
+      const idx = mentions_sent.findIndex(x => x.id===m.id);
+      if (idx >= 0) mentions_sent[idx] = m;
+      const t = tasks.find(x => x.id===m.task_id);
+      if (t && (m.status==='accepted_love'||m.status==='accepted_quit')) {
+        t._mention_accepted = true;
+        render();
+        if (Notification.permission === 'granted') {
+          new Notification('@ 已被接受', { body: m.to_username + ' 接受了你分享的「' + m.task_text + '」' });
+        } else {
+          toast(m.to_username + ' 接受了你的 @ 分享');
+        }
+      }
+    })
+    .subscribe();
+}
+
+/* Auth State */
+sb.auth.onAuthStateChange(async (_e, session) => {
+  user = session?.user || null;
+  if (user) {
+    username = user.email.split('@')[0];
+    g('uBadge').textContent = '@' + username;
+    showPage('main');
+    switchNav('home');
+    await requestNotifPermission();
+    checkStoredNotifs();
+    loadTasks();
+    loadInbox();
+    setupRealtime();
+  } else {
+    tasks = []; mentions_inbox = []; mentions_sent = [];
+    if (realtimeChan) sb.removeChannel(realtimeChan);
+    showPage('auth');
+  }
+});
+
+/* Expiry cleanup */
+setInterval(() => {
+  const now = new Date();
+  const before = mentions_inbox.length;
+  mentions_inbox = mentions_inbox.filter(m => new Date(m.expires_at) > now);
+  if (mentions_inbox.length !== before) renderInbox();
+}, 5 * 60 * 1000);
+</script>
+</body>
+</html>

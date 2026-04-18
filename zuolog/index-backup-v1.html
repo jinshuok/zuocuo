@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>双态空间 | Dual-State Focus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            transition: transform 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #764ba2;
+            padding: 16px 48px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 16px 48px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 24px;text-align:center;color:white">
+        
+        <!-- 标题区 -->
+        <h1 style="font-size:clamp(2.5rem,8vw,4rem);font-weight:700;margin-bottom:16px;text-shadow:0 4px 20px rgba(0,0,0,0.3)">
+            双态空间
+        </h1>
+        <p style="font-size:clamp(1rem,3vw,1.25rem);opacity:0.9;margin-bottom:12px;max-width:500px;line-height:1.6">
+            「做」与「不做」的平衡艺术
+        </p>
+        <p style="font-size:0.95rem;opacity:0.7;margin-bottom:48px">
+            让承诺清晰可见，让拒绝优雅从容
+        </p>
+
+        <!-- 功能卡片 -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:900px;width:100%;margin-bottom:48px">
+            <div class="glass-card">
+                <div style="font-size:2.5rem;margin-bottom:12px">✓</div>
+                <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">清晰的承诺</h3>
+                <p style="font-size:0.9rem;opacity:0.85;line-height:1.5">记录你要做的事，让目标明确可见，不再遗忘重要承诺</p>
+            </div>
+            <div class="glass-card">
+                <div style="font-size:2.5rem;margin-bottom:12px">✕</div>
+                <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">优雅的拒绝</h3>
+                <p style="font-size:0.9rem;opacity:0.85;line-height:1.5">管理待处理邀约，设定健康的边界，不委屈自己</p>
+            </div>
+            <div class="glass-card">
+                <div style="font-size:2.5rem;margin-bottom:12px">🔄</div>
+                <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">智能提醒</h3>
+                <p style="font-size:0.9rem;opacity:0.85;line-height:1.5">支持节气、阴历等多维度时间提醒，重复提醒不遗漏</p>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+            <a href="login.html">
+                <button class="btn-primary">开始使用</button>
+            </a>
+            <a href="login.html">
+                <button class="btn-secondary">登录</button>
+            </a>
+        </div>
+
+        <!-- 页脚 -->
+        <p style="margin-top:60px;font-size:0.85rem;opacity:0.5">
+            双态空间 © 2024
+        </p>
+    </div>
+
+    <script>
+        // 检查是否已登录
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+            fetch('/api/auth/me', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) {
+                    window.location.href = 'app.html';
+                }
+            })
+            .catch(() => {
+                localStorage.removeItem('authToken');
+            });
+        }
+    </script>
+</body>
+</html>
