@@ -1,0 +1,289 @@
+/* ===== 基础重置 ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #fff;
+  color: #181E25;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+
+/* ===== 顶部导航 ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.nav-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #181E25;
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  font-size: 14px;
+  color: #86909C;
+  font-weight: 400;
+}
+
+/* ===== 主内容区 ===== */
+main { flex: 1; }
+
+.hero-section {
+  padding: 16px 0 48px;
+}
+
+.hero-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===== 轮播图 ===== */
+.hero-swiper {
+  width: 100%;
+  height: 548px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .hero-swiper { height: 582px; }
+}
+
+.swiper-slide {
+  background: #fff;
+}
+
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 文字区域 */
+.slide-text {
+  text-align: center;
+  padding: 40px 24px 0;
+  position: relative;
+  z-index: 10;
+}
+
+.slide-title {
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 500;
+  color: #181E25;
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+}
+
+.slide-title .brand {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.slide-subtitle {
+  font-size: 16px;
+  color: #45515E;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  line-height: 1.5;
+}
+
+.slide-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 160px;
+  padding: 0 24px;
+  border-radius: 60px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: #181E25;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #2a3340;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #181E25;
+  border: 1px solid #181E25;
+}
+.btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+/* 图片区域 */
+.slide-media {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px 16px;
+}
+
+.slide-media img,
+.slide-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* Swiper 导航 */
+.swiper-button-prev,
+.swiper-button-next {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.05);
+  backdrop-filter: blur(12px);
+  color: #fff !important;
+  transition: all 0.3s ease;
+}
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: rgba(0,0,0,0.15);
+}
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 18px !important;
+  font-weight: 700;
+}
+
+/* Swiper 分页器 */
+.swiper-pagination {
+  bottom: 16px !important;
+}
+
+.swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(66,66,66,0.3);
+  opacity: 1;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+.swiper-pagination-bullet:hover {
+  width: 16px;
+  background: rgba(66,66,66,0.5);
+}
+.swiper-pagination-bullet-active {
+  width: 24px !important;
+  background: #424242 !important;
+}
+
+/* 加载状态 */
+.banner-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #86909C;
+  font-size: 14px;
+}
+
+/* ===== 页脚 ===== */
+.site-footer {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 24px;
+}
+
+.footer-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.copyright {
+  font-size: 13px;
+  color: #86909C;
+}
+
+.admin-link {
+  font-size: 13px;
+  color: #667eea;
+  transition: color 0.2s;
+}
+.admin-link:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .slide-title {
+    font-size: 64px;
+    line-height: 72px;
+  }
+  .slide-text { padding-top: 48px; }
+}
+
+@media (min-width: 1024px) {
+  .slide-title {
+    font-size: 72px;
+    line-height: 80px;
+  }
+}

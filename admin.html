@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - zuocuo</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .admin-body { background: #f8f9fa; }
+    .admin-main { padding: 32px 24px; }
+    .admin-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* 登录卡片 */
+    .login-card {
+      max-width: 400px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .login-title {
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 24px;
+      color: #181E25;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: #45515E;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #667eea;
+    }
+    .form-btn {
+      width: 100%;
+      height: 44px;
+      background: #181E25;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+    .form-btn:hover { background: #2a3340; }
+    .form-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-error {
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* 管理面板 */
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .admin-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .admin-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-sm {
+      height: 36px;
+      padding: 0 16px;
+      font-size: 14px;
+      min-width: auto;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-ghost {
+      background: transparent;
+      color: #45515E;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-ghost:hover { background: #f5f5f5; }
+
+    /* 列表 */
+    .banner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .banner-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s;
+    }
+    .banner-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .banner-thumb {
+      width: 80px;
+      height: 56px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f0f0f0;
+    }
+    .banner-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .banner-info h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #181E25;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .banner-info p {
+      font-size: 13px;
+      color: #86909C;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .banner-meta {
+      font-size: 12px;
+      color: #b0b8c4;
+      margin-top: 4px;
+    }
+    .banner-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: #86909C;
+    }
+    .empty-state p { margin-bottom: 16px; }
+
+    /* 模态框 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: #f5f5f5;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      color: #45515E;
+    }
+    .modal-close:hover { background: #e5e7eb; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+      .banner-item { flex-direction: column; align-items: flex-start; }
+      .banner-thumb { width: 100%; height: 120px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <header class="site-header">
+    <div class="nav-inner">
+      <a href="/" class="logo">zuocuo</a>
+      <span class="tagline">管理后台</span>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- 登录 -->
+    <div id="loginSection" class="admin-container">
+      <div class="login-card">
+        <h2 class="login-title">管理员登录</h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input type="text" id="username" class="form-input" placeholder="admin" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input type="password" id="password" class="form-input" placeholder="admin123" required>
+          </div>
+          <button type="submit" class="form-btn" id="loginBtn">登录</button>
+          <div class="form-error" id="loginError"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="adminSection" class="admin-container" style="display:none;">
+      <div class="admin-header">
+        <h2 class="admin-title">轮播图管理</h2>
+        <div class="admin-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal()">+ 新增轮播图</button>
+          <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+        </div>
+      </div>
+      <div id="bannerList" class="banner-list"></div>
+    </div>
+  </main>
+
+  <!-- 编辑模态框 -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">新增轮播图</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="bannerForm">
+        <input type="hidden" id="editId">
+        <div class="form-group">
+          <label class="form-label">标题 *</label>
+          <input type="text" id="bTitle" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">副标题</label>
+          <input type="text" id="bSubtitle" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">图片链接 *</label>
+          <input type="url" id="bImage" class="form-input" placeholder="https://example.com/image.jpg" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">按钮文字</label>
+            <input type="text" id="bBtnText" class="form-input" value="了解更多">
+          </div>
+          <div class="form-group">
+            <label class="form-label">按钮链接</label>
+            <input type="url" id="bBtnLink" class="form-input" placeholder="https://">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">详情链接</label>
+          <input type="url" id="bLink" class="form-input" placeholder="https://">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">排序</label>
+            <input type="number" id="bOrder" class="form-input" value="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">状态</label>
+            <select id="bActive" class="form-input" style="appearance:auto; padding-right:10px;">
+              <option value="1">启用</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="form-btn" id="saveBtn">保存</button>
+        <div class="form-error" id="formError"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    let token = localStorage.getItem('admin_token');
+
+    // 检查登录状态
+    if (token) {
+      showAdmin();
+    } else {
+      showLogin();
+    }
+
+    function showLogin() {
+      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('adminSection').style.display = 'none';
+    }
+
+    function showAdmin() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('adminSection').style.display = 'block';
+      loadBannerList();
+    }
+
+    // 登录
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('loginError');
+      btn.disabled = true;
+      errEl.textContent = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          token = data.token;
+          localStorage.setItem('admin_token', token);
+          showAdmin();
+        } else {
+          errEl.textContent = data.error || '登录失败';
+        }
+      } catch (err) {
+        errEl.textContent = '网络错误';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function logout() {
+      token = null;
+      localStorage.removeItem('admin_token');
+      showLogin();
+    }
+
+    // 加载列表
+    async function loadBannerList() {
+      const container = document.getElementById('bannerList');
+      container.innerHTML = '<div class="empty-state"><p>加载中...</p></div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/banners/list`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const allBanners = data.banners || [];
+
+        if (allBanners.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p>暂无轮播图</p>
+              <button class="btn btn-primary" onclick="openModal()">添加第一张</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = allBanners.map(b => `
+          <div class="banner-item">
+            <img src="${escapeHtml(b.image_url)}" class="banner-thumb" alt="" onerror="this.style.display='none'">
+            <div class="banner-info">
+              <h3>${escapeHtml(b.title)}</h3>
+              <p>${escapeHtml(b.subtitle || '无副标题')}</p>
+              <div class="banner-meta">排序: ${b.sort_order} | ${b.active ? '启用' : '禁用'}</div>
+            </div>
+            <div class="banner-actions">
+              <button class="btn btn-ghost btn-sm" onclick='editBanner(${JSON.stringify(b).replace(/'/g, "&#39;")})'>编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteBanner(${b.id})">删除</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+      }
+    }
+
+    async function authFetch(url, opts = {}) {
+      return fetch(url, {
+        ...opts,
+        headers: {
+          ...opts.headers,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).then(r => r.json());
+    }
+
+    // 模态框
+    function openModal() {
+      document.getElementById('modalTitle').textContent = '新增轮播图';
+      document.getElementById('editId').value = '';
+      document.getElementById('bannerForm').reset();
+      document.getElementById('bActive').value = '1';
+      document.getElementById('formError').textContent = '';
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+
+    function editBanner(banner) {
+      document.getElementById('modalTitle').textContent = '编辑轮播图';
+      document.getElementById('editId').value = banner.id;
+      document.getElementById('bTitle').value = banner.title || '';
+      document.getElementById('bSubtitle').value = banner.subtitle || '';
+      document.getElementById('bImage').value = banner.image_url || '';
+      document.getElementById('bBtnText').value = banner.btn_text || '了解更多';
+      document.getElementById('bBtnLink').value = banner.btn_link || '';
+      document.getElementById('bLink').value = banner.link_url || '';
+      document.getElementById('bOrder').value = banner.sort_order ?? 0;
+      document.getElementById('bActive').value = banner.active ?? 1;
+      document.getElementById('formError').textContent = '';
+      document.getElementById('modal').classList.add('active');
+    }
+
+    // 保存
+    document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveBtn');
+      const errEl = document.getElementById('formError');
+      btn.disabled = true;
+      errEl.textContent = '';
+
+      const payload = {
+        title: document.getElementById('bTitle').value,
+        subtitle: document.getElementById('bSubtitle').value,
+        image_url: document.getElementById('bImage').value,
+        btn_text: document.getElementById('bBtnText').value,
+        btn_link: document.getElementById('bBtnLink').value,
+        link_url: document.getElementById('bLink').value,
+        sort_order: parseInt(document.getElementById('bOrder').value) || 0,
+        active: parseInt(document.getElementById('bActive').value)
+      };
+
+      const id = document.getElementById('editId').value;
+      const url = id ? `${API_BASE}/api/banners/${id}` : `${API_BASE}/api/banners/create`;
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeModal();
+          loadBannerList();
+        } else {
+          errEl.textContent = data.error || '保存失败';
+        }
+      } catch (err) {
+        errEl.textContent = '网络错误';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function deleteBanner(id) {
+      if (!confirm('确定删除这张轮播图吗？')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/banners/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadBannerList();
+        } else {
+          alert(data.error || '删除失败');
+        }
+      } catch (err) {
+        alert('网络错误');
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 点击遮罩关闭
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal')) closeModal();
+    });
+  </script>
+</body>
+</html>

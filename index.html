@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>zuocuo - 不怕做错</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header class="site-header">
+    <div class="nav-inner">
+      <a href="/" class="logo">zuocuo</a>
+      <span class="tagline">不怕做错</span>
+    </div>
+  </header>
+
+  <!-- 主内容 -->
+  <main>
+    <section class="hero-section">
+      <div class="hero-container">
+        <div class="swiper hero-swiper">
+          <div class="swiper-wrapper" id="bannerWrapper">
+            <div class="swiper-slide">
+              <div class="banner-loading">加载中...</div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="copyright">© 2024 zuocuo. All rights reserved.</span>
+      <a href="/admin.html" class="admin-link">管理入口</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    let swiperInstance = null;
+
+    async function loadBanners() {
+      try {
+        const res = await fetch('/api/banners/list');
+        const data = await res.json();
+        const banners = data.banners || [];
+        const wrapper = document.getElementById('bannerWrapper');
+
+        if (banners.length === 0) {
+          wrapper.innerHTML = `
+            <div class="swiper-slide">
+              <div class="slide-content">
+                <div class="slide-text">
+                  <h1 class="slide-title"><span class="brand">zuocuo</span></h1>
+                  <p class="slide-subtitle">不怕做错，勇敢尝试</p>
+                  <div class="slide-buttons">
+                    <a href="/admin.html" class="btn btn-primary">开始管理</a>
+                  </div>
+                </div>
+                <div class="slide-media" style="background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          wrapper.innerHTML = banners.map(b => `
+            <div class="swiper-slide">
+              <div class="slide-content">
+                <div class="slide-text">
+                  <h1 class="slide-title">${escapeHtml(b.title)}</h1>
+                  ${b.subtitle ? `<p class="slide-subtitle">${escapeHtml(b.subtitle)}</p>` : ''}
+                  <div class="slide-buttons">
+                    ${b.btn_link ? `<a href="${escapeHtml(b.btn_link)}" class="btn btn-primary">${escapeHtml(b.btn_text || '了解更多')}</a>` : ''}
+                    ${b.link_url ? `<a href="${escapeHtml(b.link_url)}" class="btn btn-secondary">查看详情</a>` : ''}
+                  </div>
+                </div>
+                <div class="slide-media">
+                  <img src="${escapeHtml(b.image_url)}" alt="${escapeHtml(b.title)}" loading="lazy">
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        if (swiperInstance) swiperInstance.destroy(true, true);
+
+        swiperInstance = new Swiper('.hero-swiper', {
+          slidesPerView: 1,
+          spaceBetween: 0,
+          loop: banners.length > 1,
+          autoplay: banners.length > 1 ? {
+            delay: 5000,
+            disableOnInteraction: false,
+          } : false,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+          effect: 'fade',
+          fadeEffect: {
+            crossFade: true
+          },
+        });
+      } catch (err) {
+        console.error('加载轮播图失败:', err);
+        document.getElementById('bannerWrapper').innerHTML = `
+          <div class="swiper-slide">
+            <div class="banner-loading">加载失败，请刷新重试</div>
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadBanners();
+  </script>
+</body>
+</html>
