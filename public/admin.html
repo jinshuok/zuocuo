@@ -250,7 +250,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">密码</label>
-            <input type="password" id="password" class="form-input" placeholder="admin123" required>
+            <input type="password" id="password" class="form-input" required>
           </div>
           <button type="submit" class="form-btn" id="loginBtn">登录</button>
           <div class="form-error" id="loginError"></div>
@@ -264,6 +264,7 @@
         <h2 class="admin-title">轮播图管理</h2>
         <div class="admin-actions">
           <button class="btn btn-primary btn-sm" onclick="openModal()">+ 新增轮播图</button>
+          <button class="btn btn-ghost btn-sm" onclick="openPasswordModal()">修改密码</button>
           <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
         </div>
       </div>
@@ -321,6 +322,32 @@
         </div>
         <button type="submit" class="form-btn" id="saveBtn">保存</button>
         <div class="form-error" id="formError"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改密码模态框 -->
+  <div class="modal-overlay" id="pwdModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">修改密码</h3>
+        <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+      </div>
+      <form id="passwordForm">
+        <div class="form-group">
+          <label class="form-label">当前密码</label>
+          <input type="password" id="oldPwd" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">新密码</label>
+          <input type="password" id="newPwd" class="form-input" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label class="form-label">确认新密码</label>
+          <input type="password" id="confirmPwd" class="form-input" required minlength="6">
+        </div>
+        <button type="submit" class="form-btn" id="pwdSaveBtn">保存</button>
+        <div class="form-error" id="pwdFormError"></div>
       </form>
     </div>
   </div>
@@ -384,6 +411,65 @@
       localStorage.removeItem('admin_token');
       showLogin();
     }
+
+    // 修改密码模态框
+    function openPasswordModal() {
+      document.getElementById('passwordForm').reset();
+      document.getElementById('pwdFormError').textContent = '';
+      document.getElementById('pwdModal').classList.add('active');
+    }
+
+    function closePasswordModal() {
+      document.getElementById('pwdModal').classList.remove('active');
+    }
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('pwdSaveBtn');
+      const errEl = document.getElementById('pwdFormError');
+      btn.disabled = true;
+      errEl.textContent = '';
+
+      const newPwd = document.getElementById('newPwd').value;
+      const confirmPwd = document.getElementById('confirmPwd').value;
+
+      if (newPwd !== confirmPwd) {
+        errEl.textContent = '两次输入的新密码不一致';
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/password`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            oldPassword: document.getElementById('oldPwd').value,
+            newPassword: newPwd
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closePasswordModal();
+          alert('密码修改成功，请重新登录');
+          logout();
+        } else {
+          errEl.textContent = data.error || '修改失败';
+        }
+      } catch (err) {
+        errEl.textContent = '网络错误';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // 点击遮罩关闭密码模态框
+    document.getElementById('pwdModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('pwdModal')) closePasswordModal();
+    });
 
     // 加载列表
     async function loadBannerList() {
