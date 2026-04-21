@@ -36,6 +36,6 @@ export async function onRequestPost(context) {
         
     } catch (error) {
         console.error('Create banner error:', error);
-        return jsonResponse({ error: 'Failed to create banner' }, 500);
+        return jsonResponse({ error: error.message || 'Failed to create banner' }, 500);
     }
 }

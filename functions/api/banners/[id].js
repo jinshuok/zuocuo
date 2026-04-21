@@ -35,7 +35,7 @@ export async function onRequestPut(context) {
         
     } catch (error) {
         console.error('Update banner error:', error);
-        return jsonResponse({ error: 'Failed to update banner' }, 500);
+        return jsonResponse({ error: error.message || 'Failed to update banner' }, 500);
     }
 }
 
@@ -49,6 +49,6 @@ export async function onRequestDelete(context) {
         
     } catch (error) {
         console.error('Delete banner error:', error);
-        return jsonResponse({ error: 'Failed to delete banner' }, 500);
+        return jsonResponse({ error: error.message || 'Failed to delete banner' }, 500);
     }
 }
