@@ -20,12 +20,12 @@ export async function onRequestGet(context) {
         
         let sql, stmt;
         if (isAdmin || url.searchParams.get('all') === '1') {
-            sql = `SELECT id, title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active 
+            sql = `SELECT id, title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active, type, items 
                    FROM banners 
                    ORDER BY sort_order ASC, id ASC`;
             stmt = env.DB.prepare(sql);
         } else {
-            sql = `SELECT id, title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active 
+            sql = `SELECT id, title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active, type, items 
                    FROM banners 
                    WHERE active = 1 
                    ORDER BY sort_order ASC, id ASC`;
@@ -34,7 +34,21 @@ export async function onRequestGet(context) {
         
         const { results } = await stmt.all();
         
-        return jsonResponse({ success: true, banners: results || [] });
+        // 解析 items JSON
+        const banners = (results || []).map(b => {
+            try {
+                if (b.items && typeof b.items === 'string') {
+                    b.items = JSON.parse(b.items);
+                } else {
+                    b.items = [];
+                }
+            } catch (e) {
+                b.items = [];
+            }
+            return b;
+        });
+        
+        return jsonResponse({ success: true, banners });
         
     } catch (error) {
         console.error('List banners error:', error);

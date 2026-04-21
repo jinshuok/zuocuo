@@ -61,6 +61,103 @@
       color: #86909C;
       padding: 40px;
     }
+
+    /* ========== 轮盘轮播图样式 ========== */
+    .wheel-slide .slide-content {
+      position: relative;
+      overflow: hidden;
+    }
+    .wheel-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+    .wheel-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70%;
+      overflow: visible;
+      user-select: none;
+    }
+    .wheel-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      perspective: 1200px;
+    }
+    .wheel-item {
+      position: absolute;
+      width: 170px;
+      height: 230px;
+      left: 50%;
+      top: 50%;
+      margin-left: -85px;
+      margin-top: -115px;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.4s ease,
+                  z-index 0s;
+      will-change: transform, opacity;
+    }
+    .wheel-item-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #c7b0fe;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      position: relative;
+    }
+    .wheel-item-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .wheel-item a {
+      display: block;
+      width: 100%;
+      height: 100%;
+      text-decoration: none;
+    }
+    .wheel-item.active .wheel-item-inner {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+    .wheel-item.active .wheel-item-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      border: 3px solid rgba(255,255,255,0.6);
+      pointer-events: none;
+    }
+    .wheel-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      pointer-events: none;
+      z-index: 20;
+    }
+    @media (max-width: 768px) {
+      .wheel-item {
+        width: 120px;
+        height: 164px;
+        margin-left: -60px;
+        margin-top: -82px;
+      }
+      .wheel-container {
+        height: 65%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -109,6 +206,7 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
     let swiperInstance = null;
+    const wheelInstances = [];
 
     async function loadBanners() {
       try {
@@ -133,7 +231,11 @@
             </div>
           `;
         } else {
-          wrapper.innerHTML = banners.map(b => `
+          wrapper.innerHTML = banners.map((b, idx) => {
+            if (b.type === 'wheel') {
+              return renderWheelSlide(b, idx);
+            }
+            return `
             <div class="swiper-slide">
               <div class="slide-content">
                 <div class="slide-text">
@@ -149,7 +251,8 @@
                 </div>
               </div>
             </div>
-          `).join('');
+          `;
+          }).join('');
         }
 
         if (swiperInstance) swiperInstance.destroy(true, true);
@@ -175,6 +278,37 @@
             crossFade: true
           },
         });
+
+        // 初始化所有轮盘组件
+        wheelInstances.length = 0;
+        document.querySelectorAll('.wheel-container[data-wheel]').forEach(container => {
+          const idx = parseInt(container.dataset.wheel, 10);
+          const banner = banners[idx];
+          if (banner && banner.items && banner.items.length > 0) {
+            wheelInstances.push(new WheelCarousel(container, banner.items));
+          }
+        });
+
+        // Swiper 切换时重新计算当前轮盘位置
+        swiperInstance.on('slideChange', () => {
+          const activeSlide = document.querySelector('.swiper-slide-active .wheel-container');
+          if (activeSlide) {
+            const inst = wheelInstances.find(w => w.container === activeSlide);
+            if (inst) {
+              requestAnimationFrame(() => inst.updatePositions());
+            }
+          }
+        });
+
+        // 鼠标悬停轮盘时暂停 Swiper 自动播放
+        document.querySelectorAll('.wheel-slide').forEach(slide => {
+          slide.addEventListener('mouseenter', () => {
+            if (swiperInstance.autoplay) swiperInstance.autoplay.stop();
+          });
+          slide.addEventListener('mouseleave', () => {
+            if (swiperInstance.autoplay) swiperInstance.autoplay.start();
+          });
+        });
       } catch (err) {
         console.error('加载轮播图失败:', err);
         document.getElementById('bannerWrapper').innerHTML = `
@@ -182,6 +316,170 @@
             <div class="banner-loading">加载失败，请刷新重试</div>
           </div>
         `;
+      }
+    }
+
+    function renderWheelSlide(b, idx) {
+      const items = Array.isArray(b.items) ? b.items : [];
+      return `
+        <div class="swiper-slide wheel-slide">
+          <div class="slide-content">
+            <div class="wheel-bg" style="background-image:url('${escapeHtml(b.image_url)}')"></div>
+            <div class="slide-text" style="position:relative;z-index:5;">
+              <h1 class="slide-title">${escapeHtml(b.title)}</h1>
+              ${b.subtitle ? `<p class="slide-subtitle">${escapeHtml(b.subtitle)}</p>` : ''}
+              <div class="slide-buttons">
+                ${b.btn_link ? `<a href="${escapeHtml(b.btn_link)}" class="btn btn-primary">${escapeHtml(b.btn_text || '了解更多')}</a>` : ''}
+                ${b.link_url ? `<a href="${escapeHtml(b.link_url)}" class="btn btn-secondary">查看详情</a>` : ''}
+              </div>
+            </div>
+            <div class="wheel-container" data-wheel="${idx}">
+              <div class="wheel-track">
+                ${items.map((item, i) => `
+                  <div class="wheel-item" data-index="${i}">
+                    <a href="${escapeHtml(item.link_url || '#')}" target="_blank" draggable="false">
+                      <div class="wheel-item-inner">
+                        <img src="${escapeHtml(item.image_url)}" alt="" draggable="false" loading="lazy">
+                      </div>
+                    </a>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="wheel-hint">滚动鼠标旋转轮盘</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    class WheelCarousel {
+      constructor(container, items) {
+        this.container = container;
+        this.items = items;
+        this.angleOffset = 0;
+        this.itemElements = Array.from(container.querySelectorAll('.wheel-item'));
+        this.isDragging = false;
+        this.startY = 0;
+        this.startAngle = 0;
+        this._resizeHandler = () => this.updatePositions();
+        this.init();
+      }
+
+      init() {
+        window.addEventListener('resize', this._resizeHandler);
+        this.updatePositions();
+
+        // 鼠标滚轮
+        this.container.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.angleOffset += e.deltaY * 0.004;
+          this.updatePositions();
+        }, { passive: false });
+
+        // 触摸拖拽（移动端）
+        this.container.addEventListener('touchstart', (e) => {
+          this.isDragging = true;
+          this.startY = e.touches[0].clientY;
+          this.startAngle = this.angleOffset;
+        }, { passive: true });
+
+        this.container.addEventListener('touchmove', (e) => {
+          if (!this.isDragging) return;
+          const deltaY = e.touches[0].clientY - this.startY;
+          this.angleOffset = this.startAngle + deltaY * 0.006;
+          this.updatePositions();
+        }, { passive: true });
+
+        this.container.addEventListener('touchend', () => {
+          this.isDragging = false;
+        });
+
+        // 鼠标拖拽
+        this.container.addEventListener('mousedown', (e) => {
+          this.isDragging = true;
+          this.startY = e.clientY;
+          this.startAngle = this.angleOffset;
+          this.container.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!this.isDragging) return;
+          const deltaY = e.clientY - this.startY;
+          this.angleOffset = this.startAngle + deltaY * 0.006;
+          this.updatePositions();
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (this.isDragging) {
+            this.isDragging = false;
+            this.container.style.cursor = 'default';
+          }
+        });
+      }
+
+      updatePositions() {
+        const count = this.items.length;
+        if (count === 0) return;
+
+        const rect = this.container.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height * 0.85;
+        const radiusX = Math.min(rect.width * 0.38, 420);
+        const radiusY = Math.min(rect.height * 0.35, 160);
+
+        const itemWidth = rect.width <= 768 ? 120 : 170;
+        const itemHeight = rect.width <= 768 ? 164 : 230;
+
+        this.itemElements.forEach((el, i) => {
+          const baseAngle = (i / count) * Math.PI * 2;
+          const angle = baseAngle + this.angleOffset;
+
+          // 归一化到 [0, 2π]
+          let normAngle = angle % (Math.PI * 2);
+          if (normAngle < 0) normAngle += Math.PI * 2;
+
+          // 相对于底部中心的角度 (底部中心 = π/2)
+          let relAngle = normAngle - Math.PI / 2;
+          while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+          while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+
+          const absAngle = Math.abs(relAngle);
+
+          // 椭圆位置
+          const x = centerX + radiusX * Math.sin(normAngle);
+          const y = centerY - radiusY * Math.cos(normAngle);
+
+          // 缩放和透明度：中心最大，两侧渐小
+          const scale = Math.max(0.55, 1 - absAngle * 0.35);
+          const opacity = absAngle > Math.PI / 2 ? 0 : Math.max(0.35, 1 - absAngle * 0.7);
+
+          // 旋转：根据水平位置倾斜
+          const rotate = Math.sin(normAngle) * 18;
+
+          // z-index：中心在最前
+          const zIndex = Math.round(100 - absAngle * 40);
+
+          // 判断是否为中心项（可点击）
+          const isCenter = absAngle < 0.25;
+
+          el.style.left = `${x - itemWidth / 2}px`;
+          el.style.top = `${y - itemHeight / 2}px`;
+          el.style.transform = `rotate(${rotate}deg) scale(${scale})`;
+          el.style.opacity = opacity;
+          el.style.zIndex = zIndex;
+          el.style.visibility = opacity <= 0.01 ? 'hidden' : 'visible';
+
+          if (isCenter) {
+            el.classList.add('active');
+            const link = el.querySelector('a');
+            if (link) link.style.pointerEvents = 'auto';
+          } else {
+            el.classList.remove('active');
+            const link = el.querySelector('a');
+            if (link) link.style.pointerEvents = 'none';
+          }
+        });
       }
     }
 

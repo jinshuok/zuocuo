@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS banners (
     btn_link TEXT,
     sort_order INTEGER DEFAULT 0,
     active BOOLEAN DEFAULT 1,
+    type TEXT DEFAULT 'standard',
+    items TEXT DEFAULT '[]',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

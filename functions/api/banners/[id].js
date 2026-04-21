@@ -6,13 +6,16 @@ export async function onRequestPut(context) {
     const id = context.params.id;
     
     try {
-        const { title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active } = await request.json();
+        const { title, subtitle, image_url, link_url, btn_text, btn_link, sort_order, active, type, items } = await request.json();
+        
+        const bannerType = type || 'standard';
+        const itemsJson = Array.isArray(items) ? JSON.stringify(items) : '[]';
         
         await env.DB.prepare(
             `UPDATE banners 
              SET title = ?, subtitle = ?, image_url = ?, link_url = ?, 
                  btn_text = ?, btn_link = ?, sort_order = ?, active = ?,
-                 updated_at = CURRENT_TIMESTAMP
+                 type = ?, items = ?, updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`
         ).bind(
             title,
@@ -23,6 +26,8 @@ export async function onRequestPut(context) {
             btn_link || '',
             sort_order ?? 0,
             active ?? 1,
+            bannerType,
+            itemsJson,
             id
         ).run();
         
